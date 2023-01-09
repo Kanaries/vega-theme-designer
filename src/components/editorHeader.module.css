@@ -1,0 +1,20 @@
+.dropdown {
+  width: 200px;
+}
+
+.header-container {
+  display: flex;
+  flex-direction: row;
+  width: 100vw;
+  border-bottom: solid 2px rgba(0, 0, 0, 0.2);
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.label {
+  margin: 0 1rem;
+}
+
+.button {
+  margin-left: 1rem;
+}

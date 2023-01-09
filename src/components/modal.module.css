@@ -1,0 +1,23 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  flex-wrap: nowrap;
+  align-items: stretch;
+  padding: 1rem;
+  width: 500px;
+
+}
+
+.header {
+  margin-bottom: 1rem;
+}
+
+.footer {
+  display: flex;
+  flex-direction: row-reverse;
+  margin-top: 1rem;
+}
+
+.modal-title {
+  font-size: 20px;
+}
