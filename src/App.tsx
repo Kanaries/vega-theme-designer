@@ -1,33 +1,77 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import './App.css'
+import { Editor } from './components/Editor';
+import { Renderers } from 'vega'
+import VegaView from './components/vagaView';
+import style from './App.module.css';
+import { useRef, useState } from 'react';
+import { Config, VisualizationSpec } from 'vega-embed';
+import { ThemeProvider } from '@fluentui/react';
+import { mainTheme } from './theme';
+import EditorHeader from './components/editorHeader';
+import vegaSchema from './config/vega'
+import configMap from "./config/config"
+import ThemeIndexedDB from './utils/useIndexedDB'
+
+const DATABASE_NAME = 'vega_theme_designer'
+const OBJECTSTORE_NAME = 'ThemeTable'
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [editorValue, setEditorValue] = useState<string>('{}')
+  // const [themeValue, setThemeValue] = useState<string>("default")
+  const [rendererValue, setRendererValue] = useState<Renderers>("svg")
+  const [vegaVal, setVegaVal] = useState<Config>({})
+
+  const editorContainer = useRef<HTMLDivElement | null>(null)
+
+  function editorChange(val: string, vegaThemeVal: Config) {
+    try {
+      vegaThemeVal = JSON.parse(val)
+      setEditorValue(val)
+      setVegaVal(vegaThemeVal)
+    }catch{
+      console.log("出错了")
+      void(0)
+    }   
+  }
+
+  async function getTheme(themeName: string) {
+    let themeDB = new ThemeIndexedDB(DATABASE_NAME, 1)
+    await themeDB.open()
+    const result: Record<string, string> = await themeDB.getValue(OBJECTSTORE_NAME, themeName)
+    themeDB.close()
+    result ? setEditorValue(result.value) : setEditorValue(JSON.stringify(configMap[themeName], null, 4))
+
+  }
+
+  function onThemeChange(val: string) {
+    // setThemeValue(val)
+    getTheme(val)
+  }
 
   return (
-    <div className="App">
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src="/vite.svg" className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://reactjs.org" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+    <ThemeProvider theme={mainTheme}>
+      <div className={style['app-container']}>
+        <EditorHeader 
+          onThemeChange={onThemeChange} 
+          onRendererChange={(val: Renderers) => setRendererValue(val)}
+          editorVal={editorValue}
+        />
+        <div className={style['design-container']} ref={editorContainer}>
+          <Editor 
+            onChange={(val) => editorChange(val, vegaVal)} 
+            value={editorValue} 
+            containerEl={editorContainer}
+          />
+          <div className={style.resizer}></div>
+          <div className={style['chart-container']}>
+            {
+              vegaSchema.map((item: VisualizationSpec, index: number)  => 
+                <VegaView key={index} spec={item} renderer={rendererValue} config={vegaVal}/>
+              )
+            }
+          </div>
+        </div>
       </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </div>
+    </ThemeProvider>
   )
 }
 
