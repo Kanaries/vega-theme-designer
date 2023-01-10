@@ -1,60 +1,61 @@
-import { useRef, useState, useEffect, MutableRefObject } from 'react';
-import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
-import styles from './Editor.module.css';
-import { debounce } from 'lodash';
-
+import React, { useRef, useState, useEffect, MutableRefObject } from 'react'
+import * as monaco from 'monaco-editor/esm/vs/editor/editor.api'
+import styles from './Editor.module.css'
+import { debounce } from 'lodash'
 
 interface EditorProps {
-	onChange: changeFunc;
-	value: string;
-	containerEl: MutableRefObject<HTMLDivElement | null>;
+    onChange?: changeFunc
+    value: string
+    containerEl: MutableRefObject<HTMLDivElement | null>
 }
 
 type changeFunc = (val: string) => void
 
-export const Editor = (props: EditorProps) => {
-	// const [editor, setEditor] = useState<monaco.editor.IStandaloneCodeEditor | null>(null);
-	let editor: monaco.editor.IStandaloneCodeEditor | null = null
-	const monacoEl = useRef(null);
+export const Editor = (props: EditorProps): JSX.Element => {
+    const [editor, setEditor] = useState<monaco.editor.IStandaloneCodeEditor | null>(null)
+    const monacoEl = useRef(null)
+    const { onChange, value, containerEl } = props
+    // 挂载monaco到Dom
+    useEffect(() => {
+        if (monacoEl.current != null && (editor == null)) {
+            setEditor(monaco.editor.create(monacoEl.current, {
+                value,
+                language: 'json'
+            }))
+        }
 
-	// 挂载monaco到Dom
-	useEffect(() => {
-		if (monacoEl && !editor) {
-			editor = monaco.editor.create(monacoEl.current!, {
-				value: props.value,
-				language: 'json'
-			}
-			);
-		}
-		
-		if(editor && props.onChange) {
-			const editorChangeDebounce = debounce(props.onChange, 300)
-			editor.onDidChangeModelContent(() => {
-				editorChangeDebounce(editor?.getValue()!)
-			})
-		}
+        if ((editor != null) && (onChange != null)) {
+            const editorChangeDebounce = debounce(onChange, 300)
+            editor.onDidChangeModelContent(() => {
+                if (editor != null) {
+                    editorChangeDebounce(editor.getValue())
+                }
+            })
+        }
 
-		return () => editor?.dispose();
-	}, [monacoEl.current]);
+        return () => editor?.dispose()
+    }, [monacoEl.current])
 
-	// 监听外部对编辑器值的改变
-	useEffect(() => {
-    if (props.value) {
-      editor?.setValue(props.value);
-    }
-  }, [props.value]);
+    // 监听外部对编辑器值的改变
+    useEffect(() => {
+        if (value.length > 0 && editor != null) {
+            editor.setValue(value)
+        }
+    }, [value])
 
-	// 大小自适应
-	useEffect(() => {
-    const observer = new ResizeObserver(() => {
-			// editor?.layout()
-      window.setTimeout(() => editor?.layout(), 0);
-    });
-    observer.observe(props.containerEl.current!);
-    return () => {
-      observer.disconnect();
-    };
-  }, []);
+    // 大小自适应
+    useEffect(() => {
+        const observer = new ResizeObserver(() => {
+            // editor?.layout()
+            window.setTimeout(() => editor?.layout(), 0)
+        })
+        if (containerEl.current != null) {
+            observer.observe(containerEl.current)
+        }
+        return () => {
+            observer.disconnect()
+        }
+    }, [])
 
-	return <div className={styles.Editor} ref={monacoEl}></div>;
-};
+    return <div className={styles.Editor} ref={monacoEl}></div>
+}
