@@ -106,7 +106,7 @@ export default class ThemeIndexedDB {
 
             if (request != null) {
                 request.onsuccess = function () {
-                    resolve('write data success')
+                    resolve(themeName)
                 }
 
                 request.onerror = function () {

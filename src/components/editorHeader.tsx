@@ -52,7 +52,7 @@ async function saveTheme (themeName: string, config: string): Promise<void> {
     themeDB.close()
 }
 
-async function savaAs (themeName: string, config: string, onSuccess: () => void, onErr: () => void): Promise<void> {
+async function savaAs (themeName: string, config: string, onSuccess: (res: string) => void, onErr: () => void): Promise<void> {
     const themeDB = new ThemeIndexedDB(DATABASE_NAME, 1)
     await themeDB.open()
     themeDB.addValue(OBJECTSTORE_NAME, themeName, config)
@@ -88,9 +88,10 @@ export default function editorHeader (props: EditorHeader): JSX.Element {
         setErrMsg('Theme alread existed')
     }
 
-    function saveAsSuccess (): void {
+    function saveAsSuccess (themeName: string): void {
         setErrMsg('')
         setModalShow(false)
+        setThemeOptions([...themeOptions, { key: themeName, text: themeName }])
     }
 
     function saveAsBtnClick (): void {
@@ -144,7 +145,7 @@ export default function editorHeader (props: EditorHeader): JSX.Element {
                         className={style.button}
                         onClick={saveAsBtnClick}
                     >
-              Confirm
+                        Confirm
                     </PrimaryButton>
                     <DefaultButton className={style.button} onClick={() => { setModalShow(false) }}>Cancel</DefaultButton>
                 </div>
