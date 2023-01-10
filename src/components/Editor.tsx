@@ -13,24 +13,24 @@ interface EditorProps {
 type changeFunc = (val: string) => void
 
 export const Editor = (props: EditorProps) => {
-	const [editor, setEditor] = useState<monaco.editor.IStandaloneCodeEditor | null>(null);
+	// const [editor, setEditor] = useState<monaco.editor.IStandaloneCodeEditor | null>(null);
+	let editor: monaco.editor.IStandaloneCodeEditor | null = null
 	const monacoEl = useRef(null);
 
 	// 挂载monaco到Dom
 	useEffect(() => {
 		if (monacoEl && !editor) {
-			setEditor(
-				monaco.editor.create(monacoEl.current!, {
-					value: props.value,
-					language: 'json'
-				})
+			editor = monaco.editor.create(monacoEl.current!, {
+				value: props.value,
+				language: 'json'
+			}
 			);
 		}
 		
 		if(editor && props.onChange) {
 			const editorChangeDebounce = debounce(props.onChange, 300)
 			editor.onDidChangeModelContent(() => {
-				editorChangeDebounce(editor.getValue())
+				editorChangeDebounce(editor?.getValue()!)
 			})
 		}
 
@@ -47,6 +47,7 @@ export const Editor = (props: EditorProps) => {
 	// 大小自适应
 	useEffect(() => {
     const observer = new ResizeObserver(() => {
+			// editor?.layout()
       window.setTimeout(() => editor?.layout(), 0);
     });
     observer.observe(props.containerEl.current!);

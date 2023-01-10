@@ -62,7 +62,7 @@ function App() {
             containerEl={editorContainer}
           />
           <div className={style.resizer}></div>
-          <div className={style['chart-container']}>
+          <div className={style['charts-container']}>
             {
               vegaSchema.map((item: VisualizationSpec, index: number)  => 
                 <VegaView key={index} spec={item} renderer={rendererValue} config={vegaVal}/>

@@ -32,9 +32,16 @@
 }
 
 .charts-container {
+  min-width: 600px;
+  flex: 1;
   display: flex;
   flex-direction: row;
   flex-wrap: wrap;
+  overflow-x: hidden;
+}
+
+.charts-container::-webkit-scrollbar{
+  width: 0px;
 }
 
 :global(html, body) {
