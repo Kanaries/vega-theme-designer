@@ -20,7 +20,7 @@ export const Editor = (props: EditorProps): JSX.Element => {
         if (monacoEl.current != null && (editor == null)) {
             setEditor(monaco.editor.create(monacoEl.current, {
                 value,
-                language: 'json',
+                language: 'json'
                 automaticLayout: true
             }))
         }
@@ -34,7 +34,9 @@ export const Editor = (props: EditorProps): JSX.Element => {
             })
         }
 
-        return () => editor?.dispose()
+        return () => {
+            editor?.dispose()
+        }
     }, [monacoEl.current])
 
     // 监听外部对编辑器值的改变
@@ -44,20 +46,10 @@ export const Editor = (props: EditorProps): JSX.Element => {
         }
     }, [value])
 
-    // 大小自适应
-    useEffect(() => {
-        const observer = new ResizeObserver(() => {
-            if (editor != null) {
-                editor.layout()
-            }
-        })
-        if (monacoEl.current != null) {
-            observer.observe(monacoEl.current)
-        }
-        return () => {
-            observer.disconnect()
-        }
-    }, [])
+    // // 大小自适应
+    // useEffect(() => {
+
+    // }, [])
 
     return <div className={styles.Editor} ref={monacoEl}></div>
 }
