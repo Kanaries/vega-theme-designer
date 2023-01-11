@@ -6,7 +6,7 @@ import { debounce } from '../utils/utils'
 interface EditorProps {
     onChange?: changeFunc
     value: string
-    containerEl?: MutableRefObject<HTMLDivElement | null>
+    containerEl: MutableRefObject<HTMLDivElement | null>
 }
 
 type changeFunc = (val: string) => void
@@ -14,7 +14,7 @@ type changeFunc = (val: string) => void
 export const Editor = (props: EditorProps): JSX.Element => {
     const [editor, setEditor] = useState<monaco.editor.IStandaloneCodeEditor | null>(null)
     const monacoEl = useRef(null)
-    const { onChange, value } = props
+    const { onChange, value, containerEl } = props
     // 挂载monaco到Dom
     useEffect(() => {
         if (monacoEl.current != null && (editor == null)) {
@@ -32,6 +32,16 @@ export const Editor = (props: EditorProps): JSX.Element => {
                     editorChangeDebounce(editor.getValue())
                 }
             })
+            console.log('r')
+            const observer = new ResizeObserver(() => {
+                window.setTimeout(() => { editor.layout() }, 0)
+            })
+            if (containerEl.current != null) {
+                observer.observe(containerEl.current)
+            }
+            return () => {
+                observer.disconnect()
+            }
         }
 
         return () => {

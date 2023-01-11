@@ -20,6 +20,10 @@ function App (): JSX.Element {
     const [vegaVal, setVegaVal] = useState<Config>({})
 
     const editorContainer = useRef<HTMLDivElement | null>(null)
+    const vegaContainer = useRef<HTMLDivElement | null>(null)
+    const silder = useRef<HTMLDivElement | null>(null)
+
+    let x: number, y: number
 
     function editorChange (val: string, vegaThemeVal: Config): void {
         try {
@@ -44,6 +48,22 @@ function App (): JSX.Element {
         void getTheme(val)
     }
 
+    const fn = function (e: MouseEvent): void {
+        if (silder.current != null && editorContainer.current != null && vegaContainer.current != null) {
+            editorContainer.current.style.width = String(e.clientX - x) + 'px'
+            vegaContainer.current.style.width = String(document.documentElement.clientWidth - e.clientX + x) + 'px'
+        }
+    }
+
+    function sliderDown (e: React.MouseEvent<HTMLElement>): void {
+        x = e.nativeEvent.offsetX
+        y = e.nativeEvent.offsetY
+        window.addEventListener('mousemove', fn)
+    }
+    window.addEventListener('mouseup', function () {
+        window.removeEventListener('mousemove', fn)
+    })
+
     return (
         <ThemeProvider theme={mainTheme}>
             <div className={style['app-container']}>
@@ -52,14 +72,16 @@ function App (): JSX.Element {
                     onRendererChange={(val: Renderers) => { setRendererValue(val) }}
                     editorVal={editorValue}
                 />
-                <div className={style['design-container']} ref={editorContainer}>
-                    <Editor
-                        onChange={(val) => { editorChange(val, vegaVal) }}
-                        value={editorValue}
-                        containerEl={editorContainer}
-                    />
-                    <div className={style.resizer}></div>
-                    <div className={style['charts-container']}>
+                <div className={style['design-container']}>
+                    <div ref={editorContainer} className={style['editor-container']}>
+                        <Editor
+                            onChange={(val) => { editorChange(val, vegaVal) }}
+                            value={editorValue}
+                            containerEl={editorContainer}
+                        />
+                    </div>
+                    <div className={style.resizer} onMouseDown={sliderDown} ref={silder}></div>
+                    <div className={style['charts-container']} ref={vegaContainer}>
                         {
                             vegaSchema.map((item: VisualizationSpec, index: number) =>
                                 <VegaView key={index} spec={item} renderer={rendererValue} config={vegaVal}/>
