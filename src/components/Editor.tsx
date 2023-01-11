@@ -1,7 +1,7 @@
 import React, { useRef, useState, useEffect, MutableRefObject } from 'react'
 import * as monaco from 'monaco-editor/esm/vs/editor/editor.api'
 import styles from './Editor.module.css'
-import { debounce } from 'lodash'
+import { debounce } from '../utils/utils'
 
 interface EditorProps {
     onChange?: changeFunc
