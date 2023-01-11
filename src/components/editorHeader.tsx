@@ -5,6 +5,7 @@ import { Renderers } from 'vega'
 import { downloadJson } from '../utils/download'
 import ThemeIndexedDB, { IDBRequestEvent } from '../utils/useIndexedDB'
 import ModalStyle from './modal.module.css'
+import { useTranslation } from 'react-i18next'
 
 interface EditorHeader {
     onThemeChange?: (val: string) => void
@@ -17,6 +18,11 @@ const defaultThemeList = ['default', 'excel', 'dark', 'ggplot2', 'quartz', 'vox'
 const rendererOptions = [
     { key: 'canvas', text: 'canvas' },
     { key: 'svg', text: 'svg', selected: true }
+]
+
+const langOption = [
+    { key: 'en', text: 'English', selected: true },
+    { key: 'zh', text: '简体中文' }
 ]
 
 const DATABASE_NAME = 'vega_theme_designer'
@@ -76,6 +82,8 @@ export default function editorHeader (props: EditorHeader): JSX.Element {
     const [newTheme, setNewTheme] = useState<string>('')
     const [errMsg, setErrMsg] = useState<string>('')
 
+    const { t, i18n } = useTranslation()
+
     useEffect(() => {
         void getRestThemeList(
             themeOptions,
@@ -85,7 +93,7 @@ export default function editorHeader (props: EditorHeader): JSX.Element {
     }, [])
 
     function themeHasSame (): void {
-        setErrMsg('Theme alread existed')
+        setErrMsg(t('vegaDesigner.saveAs.Modal.errorTip') as unknown as string)
     }
 
     function saveAsSuccess (themeName: string): void {
@@ -100,7 +108,7 @@ export default function editorHeader (props: EditorHeader): JSX.Element {
 
     return (
         <div className={style['header-container']}>
-            <Label className={style.label}>Theme:</Label>
+            <Label className={style.label}>{t('vegaDesigner.theme')}:</Label>
             <Dropdown
                 options={themeOptions}
                 className={style.dropdown}
@@ -111,7 +119,7 @@ export default function editorHeader (props: EditorHeader): JSX.Element {
                     }
                 }}
             />
-            <Label className={style.label}>Renderer:</Label>
+            <Label className={style.label}>{t('vegaDesigner.renderer')}:</Label>
             <Dropdown
                 options={rendererOptions}
                 className={style.dropdown}
@@ -121,16 +129,27 @@ export default function editorHeader (props: EditorHeader): JSX.Element {
                     }
                 }}
             />
-            <DefaultButton className={style.button} onClick={() => { downloadJson(editorVal, theme) }}>Export Theme</DefaultButton>
-            <DefaultButton className={style.button} onClick={() => { void saveTheme(theme, editorVal) }}>Save Theme</DefaultButton>
-            <DefaultButton className={style.button} onClick={() => { setModalShow(true) }}>Save As</DefaultButton>
+            <DefaultButton className={style.button} onClick={() => { downloadJson(editorVal, theme) }}>{t('vegaDesigner.exportBtn')}</DefaultButton>
+            <DefaultButton className={style.button} onClick={() => { void saveTheme(theme, editorVal) }}>{t('vegaDesigner.saveTheme')}</DefaultButton>
+            <DefaultButton className={style.button} onClick={() => { setModalShow(true) }}>{t('vegaDesigner.saveAs.btn')}</DefaultButton>
+            <div className={style.lang}>
+                <Dropdown
+                    options={langOption}
+                    onChange={(e, opt) => {
+                        if (opt != null) {
+                            void i18n.changeLanguage(opt.key as string)
+                        }
+                    }}
+                />
+                <Label className={style.label}>{t('vegaDesigner.language')}:</Label>
+            </div>
             <Modal isOpen={modalShow} containerClassName={ModalStyle.container}>
                 <div className={ModalStyle.header}>
-                    <Label className={ModalStyle['modal-title']}>Please input your theme name:</Label>
+                    <Label className={ModalStyle['modal-title']}>{t('vegaDesigner.saveAs.Modal.title')}:</Label>
                 </div>
                 <div>
                     <TextField
-                        label="Theme name"
+                        label={t('vegaDesigner.saveAs.Modal.inputLabel') as unknown as string}
                         errorMessage={errMsg}
                         onChange={(e: FormEvent, val?: string) => {
                             setErrMsg('')
@@ -145,9 +164,9 @@ export default function editorHeader (props: EditorHeader): JSX.Element {
                         className={style.button}
                         onClick={saveAsBtnClick}
                     >
-                        Confirm
+                        {t('vegaDesigner.saveAs.Modal.confirm')}
                     </PrimaryButton>
-                    <DefaultButton className={style.button} onClick={() => { setModalShow(false) }}>Cancel</DefaultButton>
+                    <DefaultButton className={style.button} onClick={() => { setModalShow(false) }}>{t('vegaDesigner.saveAs.Modal.cancel')}</DefaultButton>
                 </div>
             </Modal>
         </div>

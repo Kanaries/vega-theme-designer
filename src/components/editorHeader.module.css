@@ -9,7 +9,7 @@
   border-bottom: solid 2px rgba(0, 0, 0, 0.2);
   box-sizing: border-box;
   padding: 1rem;
-
+  align-items: center;
   margin-bottom: 1rem;
 }
 
@@ -19,4 +19,14 @@
 
 .button {
   margin-left: 1rem;
+  width: 132px;
+}
+
+.lang {
+  flex: 1;
+  display: flex;
+  flex-direction: row-reverse;
+  margin-right: 1rem;
+  align-items: center;
+  width: 100px;
 }

@@ -1,0 +1,19 @@
+{
+    "vegaDesigner": {
+        "theme": "Theme",
+        "renderer": "Renderer",
+        "exportBtn": "Export Theme",
+        "saveTheme": "Save Theme",
+        "language": "language",
+        "saveAs": {
+            "btn": "Save As",
+            "Modal": {
+                "title": "Please input your theme name",
+                "inputLabel": "Theme name",
+                "cancel": "Cancel",
+                "confirm": "Confirm",
+                "errorTip": "Theme alread existed"
+            }
+        }
+    }
+}
