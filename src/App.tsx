@@ -23,7 +23,7 @@ function App (): JSX.Element {
     const vegaContainer = useRef<HTMLDivElement | null>(null)
     const silder = useRef<HTMLDivElement | null>(null)
 
-    let x: number, y: number
+    let x: number,y
 
     function editorChange (val: string, vegaThemeVal: Config): void {
         try {
