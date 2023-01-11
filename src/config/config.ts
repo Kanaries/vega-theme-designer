@@ -12,16 +12,16 @@ import ggplot2 from '../vegaConfig/ggplot2.json'
 
 const configMap: Record<string, Config> = {
     default: {},
-    excel,
+    excel: excel as Config,
     dark,
-    fivethirtyeight,
-    googlecharts,
-    latimes,
-    powerbi,
+    fivethirtyeight: fivethirtyeight as Config,
+    googlecharts: googlecharts as Config,
+    latimes: latimes as Config,
+    powerbi: powerbi as Config,
     quartz,
-    urbaninstitute,
-    vox,
-    ggplot2
+    urbaninstitute: urbaninstitute as Config,
+    vox: vox as Config,
+    ggplot2: ggplot2 as Config
 }
 
 export default configMap
