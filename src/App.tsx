@@ -23,7 +23,7 @@ function App (): JSX.Element {
     const vegaContainer = useRef<HTMLDivElement | null>(null)
     const silder = useRef<HTMLDivElement | null>(null)
 
-    let x: number,y
+    let x: number
 
     function editorChange (val: string, vegaThemeVal: Config): void {
         try {
@@ -57,7 +57,6 @@ function App (): JSX.Element {
 
     function sliderDown (e: React.MouseEvent<HTMLElement>): void {
         x = e.nativeEvent.offsetX
-        y = e.nativeEvent.offsetY
         window.addEventListener('mousemove', fn)
     }
     window.addEventListener('mouseup', function () {
