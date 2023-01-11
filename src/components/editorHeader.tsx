@@ -1,5 +1,5 @@
 import React, { FormEvent, useEffect, useState } from 'react'
-import { Dropdown, PrimaryButton, Label, DefaultButton, Modal, TextField, IDropdownOption } from '@fluentui/react'
+import { Dropdown, PrimaryButton, Label, DefaultButton, Modal, TextField, IDropdownOption, IconButton, IIconProps, IContextualMenuProps, IContextualMenuItem } from '@fluentui/react'
 import style from './editorHeader.module.css'
 import { Renderers } from 'vega'
 import { downloadJson } from '../utils/download'
@@ -18,11 +18,6 @@ const defaultThemeList = ['default', 'excel', 'dark', 'ggplot2', 'quartz', 'vox'
 const rendererOptions = [
     { key: 'canvas', text: 'canvas' },
     { key: 'svg', text: 'svg', selected: true }
-]
-
-const langOption = [
-    { key: 'en', text: 'English', selected: true },
-    { key: 'zh', text: '简体中文' }
 ]
 
 const DATABASE_NAME = 'vega_theme_designer'
@@ -84,6 +79,21 @@ export default function editorHeader (props: EditorHeader): JSX.Element {
 
     const { t, i18n } = useTranslation()
 
+    const switchLang: (ev?: React.MouseEvent<HTMLElement> | React.KeyboardEvent<HTMLElement>, item?: IContextualMenuItem) => void = (e, opt): void => {
+        if (opt != null) {
+            void i18n.changeLanguage(opt.key)
+        }
+    }
+
+    const emojiIcon: IIconProps = { iconName: 'LocaleLanguage' }
+    const langOption: IContextualMenuProps = {
+        items: [
+            { key: 'en', text: 'English', onClick: switchLang },
+            { key: 'zh', text: '简体中文', onClick: switchLang }
+        ],
+        directionalHintFixed: true
+    }
+
     useEffect(() => {
         void getRestThemeList(
             themeOptions,
@@ -133,15 +143,10 @@ export default function editorHeader (props: EditorHeader): JSX.Element {
             <DefaultButton className={style.button} onClick={() => { void saveTheme(theme, editorVal) }}>{t('vegaDesigner.saveTheme')}</DefaultButton>
             <DefaultButton className={style.button} onClick={() => { setModalShow(true) }}>{t('vegaDesigner.saveAs.btn')}</DefaultButton>
             <div className={style.lang}>
-                <Dropdown
-                    options={langOption}
-                    onChange={(e, opt) => {
-                        if (opt != null) {
-                            void i18n.changeLanguage(opt.key as string)
-                        }
-                    }}
+                <IconButton
+                    menuProps={langOption}
+                    iconProps={emojiIcon}
                 />
-                <Label className={style.label}>{t('vegaDesigner.language')}:</Label>
             </div>
             <Modal isOpen={modalShow} containerClassName={ModalStyle.container}>
                 <div className={ModalStyle.header}>
