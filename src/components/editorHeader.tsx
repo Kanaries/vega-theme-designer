@@ -76,7 +76,7 @@ async function savaAs(
 		});
 }
 
-export default function editorHeader(props: EditorHeader): JSX.Element {
+function editorHeader(props: EditorHeader): JSX.Element {
 	console.log('header');
 	const {onThemeChange, onRendererChange, editorVal} = props;
 
@@ -236,3 +236,5 @@ export default function editorHeader(props: EditorHeader): JSX.Element {
 		</div>
 	);
 }
+
+export default React.memo(editorHeader);

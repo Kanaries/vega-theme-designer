@@ -5,6 +5,7 @@
 .header-container {
   display: flex;
   flex-direction: row;
+  height: 70px;
   width: 100vw;
   border-bottom: solid 2px rgba(0, 0, 0, 0.2);
   box-sizing: border-box;

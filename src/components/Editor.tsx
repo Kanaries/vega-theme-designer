@@ -13,14 +13,13 @@ type EditorProps = {
 	containerEl: MutableRefObject<HTMLDivElement | undefined>;
 };
 
-export default function Editor(props: EditorProps): JSX.Element {
+function Editor(props: EditorProps): JSX.Element {
 	const [editor, setEditor] = useState<monaco.editor.IStandaloneCodeEditor | undefined>(undefined);
 	const monacoEl
 		= useRef<HTMLDivElement | undefined>(undefined) as MutableRefObject<HTMLDivElement>;
 	const {onChange, value, containerEl} = props;
 	// 挂载monaco到Dom
 	useEffect(() => {
-		console.log('editor');
 		if (monacoEl.current && editor === undefined) {
 			setEditor(monaco.editor.create(monacoEl.current, {
 				value,
@@ -69,3 +68,5 @@ export default function Editor(props: EditorProps): JSX.Element {
 		/>
 	);
 }
+
+export default React.memo(Editor);

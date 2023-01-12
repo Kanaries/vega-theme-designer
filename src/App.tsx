@@ -1,5 +1,7 @@
 import {type Renderers} from 'vega';
-import React, {useRef, useState, type MutableRefObject} from 'react';
+import React, {
+	useRef, useState, useCallback, type MutableRefObject,
+} from 'react';
 import {type Config} from 'vega-embed';
 import {ThemeProvider} from '@fluentui/react';
 import style from './App.module.css';
@@ -40,10 +42,10 @@ function App(): JSX.Element {
 	async function getTheme(themeName: string): Promise<void> {
 		const themeDb = new ThemeIndexedDB(DataBaseName, 1);
 		await themeDb.open();
-
 		const result: Record<string, string> | undefined
 			= await themeDb.getValue(ObjectStoreName, themeName);
 		themeDb.close();
+
 		if (result) {
 			setEditorValue(result.value);
 		} else {
@@ -71,17 +73,21 @@ function App(): JSX.Element {
 		window.removeEventListener('mousemove', fn);
 	});
 
+	const rendererChangeHeaderCallback = useCallback((val: Renderers) => {
+		setRendererValue(val);
+	}, []);
+
+	const themeChangeHeaderCallback = useCallback(onThemeChange, []);
+
+	const editorChangeCallback = useCallback(editorChange, []);
+
 	return (
 		<ThemeProvider theme={mainTheme}>
 			<div className={style['app-container']}>
 				<EditorHeader
 					editorVal={editorValue}
-					onRendererChange={(val: Renderers) => {
-						setRendererValue(val);
-					}}
-					onThemeChange={(val) => {
-						onThemeChange(val);
-					}}
+					onRendererChange={rendererChangeHeaderCallback}
+					onThemeChange={themeChangeHeaderCallback}
 				/>
 
 				<div className={style['design-container']}>
@@ -91,9 +97,7 @@ function App(): JSX.Element {
 					>
 						<Editor
 							containerEl={editorContainer}
-							onChange={(val) => {
-								editorChange(val);
-							}}
+							onChange={editorChangeCallback}
 							value={editorValue}
 						/>
 					</div>

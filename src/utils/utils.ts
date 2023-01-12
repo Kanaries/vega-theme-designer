@@ -20,4 +20,15 @@ export function debounce(func: Function, delay: number, immediate = false): Func
 	};
 }
 
-export const obj = {};
+export const onlyOneFunc = function<T> (func: (...args: any[]) => T): (...args: any[]) => T | void {
+	let hasRun = false;
+	// eslint-disable-next-line consistent-return
+	return function (this: unknown, ...args: any[]): void | T {
+		// eslint-disable-next-line @typescript-eslint/no-this-alias
+		const self = this;
+		if (!hasRun) {
+			hasRun = true;
+			return func.apply(self, args);
+		}
+	};
+};
