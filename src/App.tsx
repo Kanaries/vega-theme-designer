@@ -1,96 +1,130 @@
-import { Editor } from './components/Editor'
-import { Renderers } from 'vega'
-import VegaView from './components/vegaView'
-import style from './App.module.css'
-import React, { useRef, useState } from 'react'
-import { Config, VisualizationSpec } from 'vega-embed'
-import { ThemeProvider } from '@fluentui/react'
-import { mainTheme } from './theme'
-import EditorHeader from './components/editorHeader'
-import vegaSchema from './config/vega'
-import configMap from './config/config'
-import ThemeIndexedDB from './utils/useIndexedDB'
+import {type Renderers} from 'vega';
+import React, {useRef, useState, type MutableRefObject} from 'react';
+import {type Config} from 'vega-embed';
+import {ThemeProvider} from '@fluentui/react';
+import style from './App.module.css';
+import VegaView from './components/vegaView';
+import Editor from './components/Editor';
+import {mainTheme} from './theme';
+import EditorHeader from './components/editorHeader';
+import vegaSchema from './config/vega';
+import configMap from './config/config';
+import ThemeIndexedDB from './utils/useIndexedDB';
 
-const DATABASE_NAME = 'vega_theme_designer'
-const OBJECTSTORE_NAME = 'ThemeTable'
+const DataBaseName = 'vega_theme_designer';
+const ObjectStoreName = 'ThemeTable';
 
-function App (): JSX.Element {
-    const [editorValue, setEditorValue] = useState<string>('{}')
-    const [rendererValue, setRendererValue] = useState<Renderers>('svg')
-    const [vegaVal, setVegaVal] = useState<Config>({})
+function App(): JSX.Element {
+	const [editorValue, setEditorValue] = useState<string>('{}');
+	const [rendererValue, setRendererValue] = useState<Renderers>('svg');
+	const [vegaVal, setVegaVal] = useState<Config>({});
 
-    const editorContainer = useRef<HTMLDivElement | null>(null)
-    const vegaContainer = useRef<HTMLDivElement | null>(null)
-    const silder = useRef<HTMLDivElement | null>(null)
+	const editorContainer
+		= useRef<HTMLDivElement | undefined>(undefined) as MutableRefObject<HTMLDivElement>;
+	const vegaContainer
+		= useRef<HTMLDivElement | undefined>(undefined) as MutableRefObject<HTMLDivElement>;
+	const silder
+		= useRef<HTMLDivElement | undefined>(undefined) as MutableRefObject<HTMLDivElement>;
 
-    let x: number
+	let x: number;
 
-    function editorChange (val: string, vegaThemeVal: Config): void {
-        try {
-            vegaThemeVal = JSON.parse(val)
-            setEditorValue(val)
-            setVegaVal(vegaThemeVal)
-        } catch {
-            void (0)
-        }
-    }
+	function editorChange(val: string): void {
+		try {
+			const vegaThemeVal: Config = JSON.parse(val) as Config;
+			setVegaVal(vegaThemeVal);
+		} catch {
+			void (0);
+		}
+	}
 
-    async function getTheme (themeName: string): Promise<void> {
-        const themeDB = new ThemeIndexedDB(DATABASE_NAME, 1)
-        await themeDB.open()
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const result: Record<string, string> | undefined = await themeDB.getValue(OBJECTSTORE_NAME, themeName)
-        themeDB.close()
-        ;(result != null) ? setEditorValue(result.value) : setEditorValue(JSON.stringify(configMap[themeName], null, 4))
-    }
+	async function getTheme(themeName: string): Promise<void> {
+		const themeDb = new ThemeIndexedDB(DataBaseName, 1);
+		await themeDb.open();
 
-    function onThemeChange (val: string): void {
-        void getTheme(val)
-    }
+		const result: Record<string, string> | undefined
+			= await themeDb.getValue(ObjectStoreName, themeName);
+		themeDb.close();
+		if (result) {
+			setEditorValue(result.value);
+		} else {
+			setEditorValue(JSON.stringify(configMap[themeName], null, 4));
+		}
+	}
 
-    const fn = function (e: MouseEvent): void {
-        if (silder.current != null && editorContainer.current != null && vegaContainer.current != null) {
-            editorContainer.current.style.width = String(e.clientX - x) + 'px'
-            vegaContainer.current.style.width = String(document.documentElement.clientWidth - e.clientX + x) + 'px'
-        }
-    }
+	function onThemeChange(val: string): void {
+		void getTheme(val);
+	}
 
-    function sliderDown (e: React.MouseEvent<HTMLElement>): void {
-        x = e.nativeEvent.offsetX
-        window.addEventListener('mousemove', fn)
-    }
-    window.addEventListener('mouseup', function () {
-        window.removeEventListener('mousemove', fn)
-    })
+	const fn = function (e: MouseEvent): void {
+		if (silder.current && editorContainer.current && vegaContainer.current) {
+			editorContainer.current.style.width = `${String(e.clientX - x)}px`;
+			vegaContainer.current.style.width = `${String(document.documentElement.clientWidth - e.clientX + x)}px`;
+		}
+	};
 
-    return (
-        <ThemeProvider theme={mainTheme}>
-            <div className={style['app-container']}>
-                <EditorHeader
-                    onThemeChange={onThemeChange}
-                    onRendererChange={(val: Renderers) => { setRendererValue(val) }}
-                    editorVal={editorValue}
-                />
-                <div className={style['design-container']}>
-                    <div ref={editorContainer} className={style['editor-container']}>
-                        <Editor
-                            onChange={(val) => { editorChange(val, vegaVal) }}
-                            value={editorValue}
-                            containerEl={editorContainer}
-                        />
-                    </div>
-                    <div className={style.resizer} onMouseDown={sliderDown} ref={silder}></div>
-                    <div className={style['charts-container']} ref={vegaContainer}>
-                        {
-                            vegaSchema.map((item: VisualizationSpec, index: number) =>
-                                <VegaView key={index} spec={item} renderer={rendererValue} config={vegaVal}/>
-                            )
-                        }
-                    </div>
-                </div>
-            </div>
-        </ThemeProvider>
-    )
+	function sliderDown(e: React.MouseEvent<HTMLElement>): void {
+		x = e.nativeEvent.offsetX;
+		window.addEventListener('mousemove', fn);
+	}
+
+	window.addEventListener('mouseup', () => {
+		window.removeEventListener('mousemove', fn);
+	});
+
+	return (
+		<ThemeProvider theme={mainTheme}>
+			<div className={style['app-container']}>
+				<EditorHeader
+					editorVal={editorValue}
+					onRendererChange={(val: Renderers) => {
+						setRendererValue(val);
+					}}
+					onThemeChange={(val) => {
+						onThemeChange(val);
+					}}
+				/>
+
+				<div className={style['design-container']}>
+					<div
+						className={style['editor-container']}
+						ref={editorContainer}
+					>
+						<Editor
+							containerEl={editorContainer}
+							onChange={(val) => {
+								editorChange(val);
+							}}
+							value={editorValue}
+						/>
+					</div>
+
+					<div
+						className={style.resizer}
+						onMouseDown={sliderDown}
+						ref={silder}
+					/>
+
+					<div
+						className={style['charts-container']}
+						ref={vegaContainer}
+					>
+						{
+							Object.keys(vegaSchema).map(
+								(item: string) => (
+									<VegaView
+										config={vegaVal}
+										key={item}
+										renderer={rendererValue}
+										spec={vegaSchema[item]}
+									/>
+								),
+							)
+						}
+					</div>
+				</div>
+			</div>
+		</ThemeProvider>
+	);
 }
 
-export default App
+export default App;

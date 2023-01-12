@@ -1,24 +1,23 @@
-export function arr2Obj (
-    arr: Array<Record<string, string>>
-): Record<string, string> {
-    const result = {}
+type Params = Array<string | number | boolean | Record<string, unknown>>;
 
-    return result
+// eslint-disable-next-line @typescript-eslint/ban-types
+export function debounce(func: Function, delay: number, immediate = false): Function {
+	let timer: number | undefined;
+	let isImmediate = immediate;
+	return function (this: unknown, ...args: Params) {
+		// eslint-disable-next-line @typescript-eslint/no-this-alias
+		const self = this;
+		if (isImmediate) {
+			func.apply(self, args);
+			isImmediate = false;
+			return;
+		}
+
+		clearTimeout(timer);
+		timer = setTimeout(() => {
+			func.apply(self, args);
+		}, delay);
+	};
 }
 
-export function debounce (func: Function, delay: number, immediate: boolean = false): Function {
-    let timer: number | undefined
-
-    return function (this: unknown, ...args: any[]) {
-        const self = this
-        if (immediate) {
-            func.apply(self, args)
-            immediate = false
-            return
-        }
-        clearTimeout(timer)
-        timer = setTimeout(() => {
-            func.apply(self, args)
-        }, delay)
-    }
-}
+export const obj = {};
