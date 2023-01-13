@@ -34,24 +34,18 @@
 
 .charts-container {
   width: 50vw;
-  /* flex: 1; */
   display: flex;
   flex-direction: row;
   flex-wrap: wrap;
-  overflow-x: hidden;
+  overflow-y: scroll;
 }
 
 .editor-container {
   width: 50vw;
-  /* flex: 1; */
 }
 
-.charts-container::-webkit-scrollbar{
-  width: 0px;
-}
 
 :global(html, body) {
   margin: 0px;
   padding: 0px;
-  /* overflow-x: hidden; */
 }

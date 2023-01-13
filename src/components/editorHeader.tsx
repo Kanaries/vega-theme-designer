@@ -28,8 +28,8 @@ type EditorHeader = {
 const defaultThemeList = ['default', 'excel', 'dark', 'ggplot2', 'quartz', 'vox', 'fivethirtyeight', 'latimes', 'urbaninstitute', 'googlecharts', 'powerbi'];
 
 const rendererOptions = [
-	{key: 'canvas', text: 'canvas'},
-	{key: 'svg', text: 'svg', selected: true},
+	{key: 'canvas', text: 'canvas', selected: true},
+	{key: 'svg', text: 'svg'},
 ];
 
 const DataBaseName = 'vega_theme_designer';

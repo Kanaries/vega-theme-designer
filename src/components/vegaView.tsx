@@ -3,9 +3,8 @@ import type * as vega from 'vega';
 import * as vegalite from 'vega-lite';
 import vegaEmbed, {type VisualizationSpec, type Config, type Result} from 'vega-embed';
 import React, {
-	useRef, useEffect, useState, type MutableRefObject,
+	useRef, useEffect, type MutableRefObject,
 } from 'react';
-import style from './vegaView.module.css';
 
 type VegaConfig = {
 	spec: VisualizationSpec;
@@ -33,40 +32,19 @@ function vegaView(props: VegaConfig): JSX.Element {
 			});
 			vegaEl.current.style.width = '';
 			vegaEl.current.style.height = '';
-			console.log('render------');
+			vegaEl.current.style.width = `${vegaEl.current.clientWidth}px`;
+			vegaEl.current.style.height = `${vegaEl.current.clientHeight}px`;
 		}
 	}
 
 	useEffect(() => {
-		hasRenderer.current = false;
-		if (isVisible.current) {
-			void renderVega();
-		}
-
-		return () => {
-			if (VegaResult.current.destory) {
-				VegaResult.current.destory.finalize();
-			}
-		};
-	}, [config]);
-
-	useEffect(() => {
-		if (isVisible.current) {
-			void renderVega();
-		}
-
-		return () => {
-			if (VegaResult.current.destory) {
-				VegaResult.current.destory.finalize();
-			}
-		};
-	}, [spec, renderer, config]);
-
-	useEffect(() => {
 		const observer = new IntersectionObserver((entries) => {
 			if (entries[0].isIntersecting !== isVisible.current) {
-				void renderVega();
 				isVisible.current = entries[0].isIntersecting;
+				if (isVisible.current) {
+					void renderVega();
+				}
+
 				observer.disconnect();
 			}
 		}, {
@@ -81,6 +59,16 @@ function vegaView(props: VegaConfig): JSX.Element {
 			}
 		};
 	});
+
+	useEffect(() => {
+		hasRenderer.current = false;
+	}, [config]);
+
+	useEffect(() => {
+		if (isVisible.current && !hasRenderer.current) {
+			void renderVega();
+		}
+	}, [spec, renderer, config]);
 
 	const divStyle = {
 		width: '100%',

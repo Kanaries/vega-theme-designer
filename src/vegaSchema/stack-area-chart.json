@@ -3,7 +3,7 @@
   "width": 400,
   "height": 300,
   "data": {
-    "url": "https://vega.github.io/vega-datasets/data/iowa-electricity.csv",
+    "url": "/vegaSchameData/iowa-electricity.csv",
     "format": {"type": "csv"}
   },
   "title": "Iowa's renewable energy boom",

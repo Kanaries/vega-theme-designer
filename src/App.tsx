@@ -18,7 +18,7 @@ const ObjectStoreName = 'ThemeTable';
 
 function App(): JSX.Element {
 	const [editorValue, setEditorValue] = useState<string>('{}');
-	const [rendererValue, setRendererValue] = useState<Renderers>('svg');
+	const [rendererValue, setRendererValue] = useState<Renderers>('canvas');
 	const [vegaVal, setVegaVal] = useState<Config>({});
 
 	const editorContainer
