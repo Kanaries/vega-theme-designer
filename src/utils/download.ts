@@ -1,4 +1,7 @@
-function downloadJson(jsonText: string | (() => string), filename: string): void {
+function downloadJson(
+	jsonText: string | (() => string),
+	filename: string,
+): void {
 	let json = '';
 	if (typeof jsonText === 'function') {
 		json = jsonText();

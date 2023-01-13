@@ -1,5 +1,5 @@
 import React, {
-	useRef, useState, useEffect, type MutableRefObject,
+	useRef, useState, useEffect, type MutableRefObject, ReactElement,
 } from 'react';
 import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
 import styles from './Editor.module.css';
@@ -13,10 +13,10 @@ type EditorProps = {
 	containerEl: MutableRefObject<HTMLDivElement | undefined>;
 };
 
-function Editor(props: EditorProps): JSX.Element {
+function Editor(props: EditorProps): ReactElement {
 	const [editor, setEditor] = useState<monaco.editor.IStandaloneCodeEditor | undefined>(undefined);
-	const monacoEl
-		= useRef<HTMLDivElement | undefined>(undefined) as MutableRefObject<HTMLDivElement>;
+	const monacoEl =
+		useRef<HTMLDivElement | undefined>(undefined) as MutableRefObject<HTMLDivElement>;
 	const {onChange, containerEl} = props;
 	// 挂载monaco到Dom
 	useEffect(() => {
@@ -58,7 +58,7 @@ function Editor(props: EditorProps): JSX.Element {
 
 	// 监听外部对编辑器值的改变
 	useEffect(() => {
-		const callbackIndex = addEventListen('editorChange', (opt) => {
+		const callbackIndex = addEventListen('editorChange', opt => {
 			if (editor && opt.val) {
 				editor.setValue(opt.val);
 			}

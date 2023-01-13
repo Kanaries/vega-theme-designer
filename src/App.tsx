@@ -1,6 +1,6 @@
 import {type Renderers} from 'vega';
 import React, {
-	useRef, useState, useCallback, type MutableRefObject,
+	useRef, useState, useCallback, type MutableRefObject, ReactElement,
 } from 'react';
 import {type Config} from 'vega-embed';
 import {ThemeProvider} from '@fluentui/react';
@@ -9,8 +9,7 @@ import VegaView from './components/vegaView';
 import Editor from './components/Editor';
 import {mainTheme} from './theme';
 import EditorHeader from './components/editorHeader';
-import vegaSchema from './config/vega';
-import configMap from './config/config';
+import {configMap, schemaUrl} from './utils/loadVegaResource';
 import ThemeIndexedDB from './utils/useIndexedDB';
 import {setEditorValue} from './components/editorValue';
 import {emitEvent} from './utils/utils';
@@ -18,16 +17,16 @@ import {emitEvent} from './utils/utils';
 const DataBaseName = 'vega_theme_designer';
 const ObjectStoreName = 'ThemeTable';
 
-function App(): JSX.Element {
+function App(): ReactElement {
 	const [rendererValue, setRendererValue] = useState<Renderers>('canvas');
 	const [vegaVal, setVegaVal] = useState<Config>({});
 
-	const editorContainer
-		= useRef<HTMLDivElement | undefined>(undefined) as MutableRefObject<HTMLDivElement>;
-	const vegaContainer
-		= useRef<HTMLDivElement | undefined>(undefined) as MutableRefObject<HTMLDivElement>;
-	const silder
-		= useRef<HTMLDivElement | undefined>(undefined) as MutableRefObject<HTMLDivElement>;
+	const editorContainer =
+		useRef<HTMLDivElement | undefined>(undefined) as MutableRefObject<HTMLDivElement>;
+	const vegaContainer =
+		useRef<HTMLDivElement | undefined>(undefined) as MutableRefObject<HTMLDivElement>;
+	const silder =
+		useRef<HTMLDivElement | undefined>(undefined) as MutableRefObject<HTMLDivElement>;
 
 	let x: number;
 
@@ -35,16 +34,14 @@ function App(): JSX.Element {
 		try {
 			const vegaThemeVal: Config = JSON.parse(val) as Config;
 			setVegaVal(vegaThemeVal);
-		} catch {
-			void (0);
-		}
+		} catch { /* empty */ }
 	}
 
 	async function getTheme(themeName: string): Promise<void> {
 		const themeDb = new ThemeIndexedDB(DataBaseName, 1);
 		await themeDb.open();
-		const result: Record<string, string> | undefined
-			= await themeDb.getValue(ObjectStoreName, themeName);
+		const result: Record<string, string> | undefined =
+			await themeDb.getValue(ObjectStoreName, themeName);
 		themeDb.close();
 
 		if (result) {
@@ -53,7 +50,9 @@ function App(): JSX.Element {
 				val: result.value,
 			});
 		} else {
-			const value = JSON.stringify(configMap[themeName], null, 4);
+			// const config: Config = await configMap[themeName];
+			// const value = JSON.stringify(configMap[themeName], null, 4);
+			const value = await configMap[themeName];
 			setEditorValue(value);
 			emitEvent('editorChange', {
 				val: value,
@@ -62,7 +61,7 @@ function App(): JSX.Element {
 	}
 
 	function onThemeChange(val: string): void {
-		void getTheme(val);
+		getTheme(val);
 	}
 
 	const fn = function (e: MouseEvent): void {
@@ -119,13 +118,13 @@ function App(): JSX.Element {
 						ref={vegaContainer}
 					>
 						{
-							Object.keys(vegaSchema).map(
+							Object.keys(schemaUrl).map(
 								(item: string) => (
 									<VegaView
 										config={vegaVal}
 										key={item}
 										renderer={rendererValue}
-										spec={vegaSchema[item]}
+										schemaName={item}
 									/>
 								),
 							)

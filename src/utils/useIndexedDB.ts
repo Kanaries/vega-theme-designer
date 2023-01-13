@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/naming-convention */
-
 type IDBEventTarget = {
 	result: IDBDatabase;
 } & EventTarget;
@@ -10,8 +8,11 @@ export type IDBRequestEvent = {
 
 export default class ThemeIndexedDB {
 	DBName = '';
+
 	version = 1;
+
 	DataBase: IDBDatabase | undefined;
+
 	constructor(DBName: string, version: number) {
 		this.DBName = DBName;
 		this.version = version;
@@ -19,7 +20,6 @@ export default class ThemeIndexedDB {
 	}
 
 	async open(callback?: (e: Event) => void): Promise<IDBDatabase | Error> {
-		// eslint-disable-next-line @typescript-eslint/no-this-alias
 		const self = this;
 		return new Promise((resolve, reject) => {
 			let db: IDBDatabase;
@@ -39,10 +39,15 @@ export default class ThemeIndexedDB {
 		});
 	}
 
-	async getValue(storeName: string, key: string): Promise<Record<string, string>> {
-		return new Promise((resolve) => {
-			const request: IDBRequest<Record<string, string>> | undefined
-        = this.DataBase?.transaction([storeName]).objectStore(storeName).get(key);
+	async getValue(
+		storeName: string,
+		key: string,
+	): Promise<Record<string, string>> {
+		return new Promise(resolve => {
+			const request: IDBRequest<Record<string, string>> | undefined =
+				this.DataBase?.transaction([storeName])
+					.objectStore(storeName)
+					.get(key);
 
 			if (request != null) {
 				request.onsuccess = function () {
@@ -54,10 +59,13 @@ export default class ThemeIndexedDB {
 
 	async getAll(storeName: string): Promise<Array<Record<string, string>>> {
 		return new Promise((resolve, reject) => {
-			const request: IDBRequest<Array<Record<string, string>>> | undefined
-        = this.DataBase?.transaction([storeName]).objectStore(storeName).getAll();
+			const request:
+				| IDBRequest<Array<Record<string, string>>>
+				| undefined = this.DataBase?.transaction([storeName])
+				.objectStore(storeName)
+				.getAll();
 
-			if (request != null) {
+			if (request) {
 				request.onsuccess = function () {
 					resolve(request.result);
 				};
@@ -75,8 +83,10 @@ export default class ThemeIndexedDB {
 		themeValue: string,
 	): Promise<string> {
 		return new Promise((resolve, reject) => {
-			const request: IDBRequest<IDBValidKey> | undefined
-        = this.DataBase?.transaction([storeName], 'readwrite').objectStore(storeName).put({themeName, value: themeValue});
+			const request: IDBRequest<IDBValidKey> | undefined =
+				this.DataBase?.transaction([storeName], 'readwrite')
+					.objectStore(storeName)
+					.put({themeName, value: themeValue});
 
 			if (request != null) {
 				request.onsuccess = function () {
@@ -96,8 +106,10 @@ export default class ThemeIndexedDB {
 		themeValue: string,
 	): Promise<string> {
 		return new Promise((resolve, reject) => {
-			const request: IDBRequest<IDBValidKey> | undefined
-        = this.DataBase?.transaction([storeName], 'readwrite').objectStore(storeName).add({themeName, value: themeValue});
+			const request: IDBRequest<IDBValidKey> | undefined =
+				this.DataBase?.transaction([storeName], 'readwrite')
+					.objectStore(storeName)
+					.add({themeName, value: themeValue});
 
 			if (request != null) {
 				request.onsuccess = function () {

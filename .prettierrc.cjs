@@ -4,8 +4,11 @@ module.exports = {
 	useTabs: true,
 	singleQuote: true,
 	semi: true,
-	trailingComma: true,
+	trailingComma: 'all',
 	bracketSpacing: true,
 	eslintIntegration: true,
-	bracketSpacing: false
+	bracketSpacing: false,
+	eslintIntegration: true,
+	arrowParens: 'avoid',
+	embeddedLanguageFormatting: 'auto',
 };

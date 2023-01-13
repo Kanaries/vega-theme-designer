@@ -5,76 +5,36 @@ module.exports = {
 	},
 	extends: [
 		'eslint:recommended',
-		'plugin:react/all',
 		'plugin:@typescript-eslint/recommended',
-		'xo',
+		'plugin:react/all',
 		'airbnb',
-	],
-	overrides: [
-		{
-			extends: ['xo-typescript'],
-			files: [
-				'*.ts',
-				'*.tsx',
-			],
-		},
 	],
 	settings: {
 		'import/parsers': {
-			'@typescript-eslint/parser': [
-				'.ts',
-				'.tsx',
-			],
+			'@typescript-eslint/parser': ['.ts', '.tsx'],
 		},
 		'import/resolver': {
 			node: {
-				extensions: [
-					'.js',
-					'.jsx',
-					'.ts',
-					'.tsx',
-				],
-				moduleDirectory: [
-					'node_modules',
-					'src/',
-				],
+				extensions: ['.js', '.jsx', '.ts', '.tsx'],
+				moduleDirectory: ['node_modules', 'src/'],
 			},
 			typescript: {
 				directory: 'tsconfig.json',
 			},
 		},
-		'import/extensions': [
-			'.js',
-			'.jsx',
-			'.ts',
-			'.tsx',
-		],
+		'import/extensions': ['.js', '.jsx', '.ts', '.tsx'],
 	},
 	parserOptions: {
 		ecmaVersion: 'latest',
 		sourceType: 'module',
 		project: './tsconfig.json',
 	},
-	plugins: [
-		'react',
-		'import',
-		'@typescript-eslint',
-	],
+	plugins: ['react', 'import', '@typescript-eslint'],
 	rules: {
-		// '@typescript-eslint/ban-types': 'off',
-		quotes: [
-			'error',
-			'single',
-		],
-		'no-tabs': [
-			'error',
-			{allowIndentationTabs: true},
-		],
-		indent: [
-			'error',
-			'tab',
-		],
-		// 'comma-dangle': ['error', 'never'],
+		quotes: ['error', 'single'],
+		'no-tabs': ['error', {allowIndentationTabs: true}],
+		'func-names': ['error', 'never'],
+		indent: 'off',
 		'import/extensions': [
 			'error',
 			'ignorePackages',
@@ -85,36 +45,18 @@ module.exports = {
 				tsx: 'never',
 			},
 		],
-		semi: [
-			'error',
-			'always',
-		],
+		semi: ['error', 'always'],
 		'react/jsx-filename-extension': [
 			1,
 			{
-				extensions: [
-					'.js',
-					'.jsx',
-					'tsx',
-				],
+				extensions: ['.js', '.jsx', 'tsx'],
 			},
 		],
-		'react/jsx-indent': [
-			'error',
-			'tab',
-		],
-		'react/jsx-indent-props': [
-			'error',
-			'tab',
-		],
-		'operator-linebreak': [
-			'error',
-			'before',
-		],
-		'object-curly-spacing': [
-			'error',
-			'never',
-		],
+		'arrow-parens': ['error', 'as-needed'],
+		'react/jsx-indent': ['error', 'tab'],
+		'react/jsx-indent-props': ['error', 'tab'],
+		'operator-linebreak': ['error', 'after'],
+		'object-curly-spacing': ['error', 'never'],
 		'jsx-a11y/no-static-element-interactions': 'off',
 		'@typescript-eslint/ban-types': 'off',
 		'@typescript-eslint/no-this-alias': [
@@ -124,5 +66,13 @@ module.exports = {
 				allowedNames: ['self'],
 			},
 		],
+		'@typescript-eslint/naming-convention': [
+			'error',
+			{
+				selector: 'variable',
+				format: ['PascalCase', 'camelCase', 'UPPER_CASE'],
+			},
+		],
+		'no-param-reassign': ['error', {props: false}],
 	},
 };

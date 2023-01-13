@@ -1,4 +1,6 @@
-const editorValueChangeCallbackList: Array<((val: string) => void) | undefined> = [];
+const editorValueChangeCallbackList: Array<
+	((val: string) => void) | undefined
+> = [];
 
 export const editorValue: Record<string, string> = {current: '{}'};
 
@@ -6,7 +8,7 @@ export function setEditorValue(val: string): void {
 	const lastVal = editorValue.current;
 	if (lastVal !== val) {
 		editorValue.current = val;
-		editorValueChangeCallbackList.forEach((item) => {
+		editorValueChangeCallbackList.forEach(item => {
 			if (item && lastVal !== val) {
 				item(val);
 			}
@@ -18,7 +20,9 @@ export function getEditorValue() {
 	return editorValue.current;
 }
 
-export function addEditorValueChangeCallback(func: (val: string) => void): number {
+export function addEditorValueChangeCallback(
+	func: (val: string) => void,
+): number {
 	editorValueChangeCallbackList.push(func);
 	return editorValueChangeCallbackList.length - 1;
 }

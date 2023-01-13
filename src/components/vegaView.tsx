@@ -1,32 +1,31 @@
 import type * as vega from 'vega';
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import * as vegalite from 'vega-lite';
 import vegaEmbed, {type VisualizationSpec, type Config, type Result} from 'vega-embed';
 import React, {
-	useRef, useEffect, type MutableRefObject,
+	useRef, useEffect, type MutableRefObject, ReactElement,
 } from 'react';
+import {schemaMap} from '../utils/loadVegaResource';
 
 type VegaConfig = {
-	spec: VisualizationSpec;
+	schemaName: string,
 	renderer: vega.Renderers;
 	config: Config;
 };
 
-function vegaView(props: VegaConfig): JSX.Element {
-	const vegaEl
-		= useRef<HTMLDivElement | undefined>(undefined) as MutableRefObject<HTMLDivElement>;
+function vegaView(props: VegaConfig): ReactElement {
+	const vegaEl =
+		useRef<HTMLDivElement | undefined>(undefined) as MutableRefObject<HTMLDivElement>;
 
 	const hasRenderer = useRef<boolean>(false);
 	const isVisible = useRef<boolean>(false);
 	const VegaResult = useRef <Record<string, Result>>({});
 
-	const {spec, renderer, config} = props;
+	const {schemaName, renderer, config} = props;
 
 	async function renderVega() {
+		const spec: VisualizationSpec = JSON.parse(await schemaMap[schemaName]);
 		spec.config = config;
 		if (!hasRenderer.current) {
 			hasRenderer.current = true;
-			console.log('render');
 			VegaResult.current.destory = await vegaEmbed(vegaEl.current, spec, {
 				actions: false,
 				renderer,
@@ -39,11 +38,11 @@ function vegaView(props: VegaConfig): JSX.Element {
 	}
 
 	useEffect(() => {
-		const observer = new IntersectionObserver((entries) => {
+		const observer = new IntersectionObserver(entries => {
 			if (entries[0].isIntersecting !== isVisible.current) {
 				isVisible.current = entries[0].isIntersecting;
 				if (isVisible.current) {
-					void renderVega();
+					renderVega();
 				}
 
 				observer.disconnect();
@@ -64,7 +63,7 @@ function vegaView(props: VegaConfig): JSX.Element {
 	useEffect(() => {
 		hasRenderer.current = false;
 		if (isVisible.current) {
-			void renderVega();
+			renderVega();
 		}
 	}, [config, renderer]);
 

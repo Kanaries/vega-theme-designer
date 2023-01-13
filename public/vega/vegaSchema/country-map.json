@@ -4,7 +4,7 @@
   "height": 300,
   "title": "Unemployment rate per county",
   "data": {
-    "url": "/vegaSchameData/us-10m.json",
+    "url": "/vega/vegaSchameData/us-10m.json",
     "format": {"type": "topojson", "feature": "counties"}
   },
   "transform": [
@@ -12,7 +12,7 @@
       "lookup": "id",
       "from": {
         "data": {
-          "url": "/vegaSchameData/unemployment.tsv"
+          "url": "/vega/vegaSchameData/unemployment.tsv"
         },
         "key": "id",
         "fields": ["rate"]

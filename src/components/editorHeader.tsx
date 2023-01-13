@@ -1,5 +1,5 @@
 import React, {
-	type FormEvent, useEffect, useState, useRef,
+	type FormEvent, useEffect, useState, useRef, ReactElement,
 } from 'react';
 import {
 	Dropdown,
@@ -48,8 +48,8 @@ async function getRestThemeList(callback: (restList: IDropdownOption[]) => void)
 	const themeDb = new ThemeIndexedDB(DataBaseName, 1);
 	await themeDb.open(callbackFun);
 	const allTheme = await themeDb.getAll(ObjectStoreName);
-	const restTheme = allTheme.filter((item) => !defaultThemeList.includes(item?.themeName));
-	const restThemeList: IDropdownOption[] = restTheme.map((item) => ({
+	const restTheme = allTheme.filter(item => !defaultThemeList.includes(item?.themeName));
+	const restThemeList: IDropdownOption[] = restTheme.map(item => ({
 		key: item?.themeName,
 		text: item?.themeName,
 	}));
@@ -78,11 +78,11 @@ async function savaAs(
 		});
 }
 
-function editorHeader(props: EditorHeader): JSX.Element {
+function editorHeader(props: EditorHeader): ReactElement {
 	const {onThemeChange, onRendererChange} = props;
 
 	const [themeOptions, setThemeOptions] = useState<IDropdownOption[]>([
-		...defaultThemeList.map((item) => {
+		...defaultThemeList.map(item => {
 			if (item === 'default') {
 				return {key: item, text: item, selected: true};
 			}
@@ -103,7 +103,7 @@ function editorHeader(props: EditorHeader): JSX.Element {
 		item?: IContextualMenuItem
 	) => void = (e, opt): void => {
 		if (opt) {
-			void i18n.changeLanguage(opt.key);
+			i18n.changeLanguage(opt.key);
 		}
 	};
 
@@ -117,7 +117,7 @@ function editorHeader(props: EditorHeader): JSX.Element {
 	};
 
 	useEffect(() => {
-		void getRestThemeList(
+		getRestThemeList(
 			(restList: IDropdownOption[]) => {
 				setThemeOptions([...themeOptions, ...restList]);
 			},
@@ -135,7 +135,7 @@ function editorHeader(props: EditorHeader): JSX.Element {
 	}
 
 	function saveAsBtnClick(): void {
-		void savaAs(newTheme.current, getEditorValue(), saveAsSuccess, themeHasSame);
+		savaAs(newTheme.current, getEditorValue(), saveAsSuccess, themeHasSame);
 	}
 
 	return (
@@ -178,7 +178,7 @@ function editorHeader(props: EditorHeader): JSX.Element {
 			<DefaultButton
 				className={style.button}
 				onClick={() => {
-					void saveTheme(theme.current, getEditorValue());
+					saveTheme(theme.current, getEditorValue());
 				}}
 			>
 				{t('vegaDesigner.saveTheme')}
