@@ -26,6 +26,7 @@ function vegaView(props: VegaConfig): JSX.Element {
 		spec.config = config;
 		if (!hasRenderer.current) {
 			hasRenderer.current = true;
+			console.log('render');
 			VegaResult.current.destory = await vegaEmbed(vegaEl.current, spec, {
 				actions: false,
 				renderer,
@@ -62,13 +63,10 @@ function vegaView(props: VegaConfig): JSX.Element {
 
 	useEffect(() => {
 		hasRenderer.current = false;
-	}, [config]);
-
-	useEffect(() => {
-		if (isVisible.current && !hasRenderer.current) {
+		if (isVisible.current) {
 			void renderVega();
 		}
-	}, [spec, renderer, config]);
+	}, [config, renderer]);
 
 	const divStyle = {
 		width: '100%',

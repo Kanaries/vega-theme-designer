@@ -32,3 +32,36 @@ export const onlyOneFunc = function<T> (func: (...args: any[]) => T): (...args: 
 		}
 	};
 };
+
+const eventMap: Record<string, Array<((val: Record<string, string>) => void) | undefined>> = {};
+
+export function addEventListen(
+	eventName: string,
+	func: (val: Record<string, string>) => void,
+): number {
+	if (eventMap[eventName]) {
+		eventMap[eventName].push(func);
+	} else {
+		eventMap[eventName] = [func];
+	}
+
+	return eventMap[eventName].length - 1;
+}
+
+export function emitEvent(eventName: string, val: Record<string, string>): void {
+	if (eventMap[eventName]) {
+		eventMap[eventName].forEach((item) => {
+			if (item) {
+				item(val);
+			}
+		});
+	}
+}
+
+export function removeEventListen(eventName: string, listenIndex: number): void {
+	if (eventMap[eventName]) {
+		if (eventMap[eventName][listenIndex]) {
+			eventMap[eventName][listenIndex] = undefined;
+		}
+	}
+}

@@ -12,12 +12,13 @@ import EditorHeader from './components/editorHeader';
 import vegaSchema from './config/vega';
 import configMap from './config/config';
 import ThemeIndexedDB from './utils/useIndexedDB';
+import {setEditorValue} from './components/editorValue';
+import {emitEvent} from './utils/utils';
 
 const DataBaseName = 'vega_theme_designer';
 const ObjectStoreName = 'ThemeTable';
 
 function App(): JSX.Element {
-	const [editorValue, setEditorValue] = useState<string>('{}');
 	const [rendererValue, setRendererValue] = useState<Renderers>('canvas');
 	const [vegaVal, setVegaVal] = useState<Config>({});
 
@@ -48,8 +49,15 @@ function App(): JSX.Element {
 
 		if (result) {
 			setEditorValue(result.value);
+			emitEvent('editorChange', {
+				val: result.value,
+			});
 		} else {
-			setEditorValue(JSON.stringify(configMap[themeName], null, 4));
+			const value = JSON.stringify(configMap[themeName], null, 4);
+			setEditorValue(value);
+			emitEvent('editorChange', {
+				val: value,
+			});
 		}
 	}
 
@@ -85,7 +93,6 @@ function App(): JSX.Element {
 		<ThemeProvider theme={mainTheme}>
 			<div className={style['app-container']}>
 				<EditorHeader
-					editorVal={editorValue}
 					onRendererChange={rendererChangeHeaderCallback}
 					onThemeChange={themeChangeHeaderCallback}
 				/>
@@ -98,7 +105,6 @@ function App(): JSX.Element {
 						<Editor
 							containerEl={editorContainer}
 							onChange={editorChangeCallback}
-							value={editorValue}
 						/>
 					</div>
 

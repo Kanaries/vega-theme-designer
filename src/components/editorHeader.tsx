@@ -1,4 +1,6 @@
-import React, {type FormEvent, useEffect, useState} from 'react';
+import React, {
+	type FormEvent, useEffect, useState, useRef,
+} from 'react';
 import {
 	Dropdown,
 	PrimaryButton,
@@ -18,11 +20,11 @@ import style from './editorHeader.module.css';
 import downloadJson from '../utils/download';
 import ThemeIndexedDB, {type IDBRequestEvent} from '../utils/useIndexedDB';
 import ModalStyle from './modal.module.css';
+import {getEditorValue} from './editorValue';
 
 type EditorHeader = {
 	onThemeChange?: (val: string) => void;
 	onRendererChange?: (val: Renderers) => void;
-	editorVal: string;
 };
 
 const defaultThemeList = ['default', 'excel', 'dark', 'ggplot2', 'quartz', 'vox', 'fivethirtyeight', 'latimes', 'urbaninstitute', 'googlecharts', 'powerbi'];
@@ -77,8 +79,7 @@ async function savaAs(
 }
 
 function editorHeader(props: EditorHeader): JSX.Element {
-	console.log('header');
-	const {onThemeChange, onRendererChange, editorVal} = props;
+	const {onThemeChange, onRendererChange} = props;
 
 	const [themeOptions, setThemeOptions] = useState<IDropdownOption[]>([
 		...defaultThemeList.map((item) => {
@@ -90,9 +91,10 @@ function editorHeader(props: EditorHeader): JSX.Element {
 		}),
 	]);
 	const [modalShow, setModalShow] = useState<boolean>(false);
-	const [theme, setTheme] = useState<string>('default');
-	const [newTheme, setNewTheme] = useState<string>('');
 	const [errMsg, setErrMsg] = useState<string>('');
+
+	const theme = useRef<string>('default');
+	const newTheme = useRef<string>('');
 
 	const {t, i18n} = useTranslation();
 
@@ -133,7 +135,7 @@ function editorHeader(props: EditorHeader): JSX.Element {
 	}
 
 	function saveAsBtnClick(): void {
-		void savaAs(newTheme, editorVal, saveAsSuccess, themeHasSame);
+		void savaAs(newTheme.current, getEditorValue(), saveAsSuccess, themeHasSame);
 	}
 
 	return (
@@ -148,7 +150,7 @@ function editorHeader(props: EditorHeader): JSX.Element {
 				onChange={(e, opt) => {
 					if (opt && onThemeChange) {
 						onThemeChange(opt.text);
-						setTheme(opt.text);
+						theme.current = opt.text;
 					}
 				}}
 			/>
@@ -168,7 +170,7 @@ function editorHeader(props: EditorHeader): JSX.Element {
 			<DefaultButton
 				className={style.button}
 				onClick={() => {
-					downloadJson(editorVal, theme);
+					downloadJson(getEditorValue(), theme.current);
 				}}
 			>
 				{t('vegaDesigner.exportBtn')}
@@ -176,7 +178,7 @@ function editorHeader(props: EditorHeader): JSX.Element {
 			<DefaultButton
 				className={style.button}
 				onClick={() => {
-					void saveTheme(theme, editorVal);
+					void saveTheme(theme.current, getEditorValue());
 				}}
 			>
 				{t('vegaDesigner.saveTheme')}
@@ -209,7 +211,7 @@ function editorHeader(props: EditorHeader): JSX.Element {
 						onChange={(e: FormEvent, val?: string) => {
 							setErrMsg('');
 							if (val !== undefined) {
-								setNewTheme(val);
+								newTheme.current = val;
 							}
 						}}
 					/>
