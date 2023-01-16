@@ -1,6 +1,6 @@
 import {type Renderers} from 'vega';
 import React, {
-	useRef, useState, useCallback, type MutableRefObject, ReactElement,
+	useRef, useState, useCallback, type MutableRefObject, ReactElement, useEffect,
 } from 'react';
 import {type Config} from 'vega-embed';
 import {ThemeProvider} from '@fluentui/react';
@@ -76,8 +76,15 @@ function App(): ReactElement {
 		window.addEventListener('mousemove', fn);
 	}
 
-	window.addEventListener('mouseup', () => {
-		window.removeEventListener('mousemove', fn);
+	useEffect(() => {
+		const mouseupCb = () => {
+			window.removeEventListener('mousemove', fn);
+		};
+		window.addEventListener('mouseup', mouseupCb);
+
+		return () => {
+			window.removeEventListener('mouseup', mouseupCb);
+		};
 	});
 
 	const rendererChangeHeaderCallback = useCallback((val: Renderers) => {
