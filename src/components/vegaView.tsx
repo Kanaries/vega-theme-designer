@@ -4,6 +4,7 @@ import React, {
 	useRef, useEffect, type MutableRefObject, ReactElement,
 } from 'react';
 import {schemaMap} from '../utils/loadVegaResource';
+import {addEventListen, removeEventListen} from '../utils/utils';
 
 type VegaConfig = {
 	schemaName: string,
@@ -22,14 +23,15 @@ function vegaView(props: VegaConfig): ReactElement {
 	const {schemaName, renderer, config} = props;
 
 	async function renderVega() {
-		const spec: VisualizationSpec = JSON.parse(await schemaMap[schemaName]);
-		spec.config = config;
 		if (!hasRenderer.current) {
 			hasRenderer.current = true;
+			const spec: VisualizationSpec = JSON.parse(await schemaMap[schemaName]);
+			spec.config = config;
 			VegaResult.current.destory = await vegaEmbed(vegaEl.current, spec, {
 				actions: false,
 				renderer,
 			});
+			console.log('render');
 			vegaEl.current.style.width = '';
 			vegaEl.current.style.height = '';
 			vegaEl.current.style.width = `${vegaEl.current.clientWidth}px`;
@@ -52,11 +54,16 @@ function vegaView(props: VegaConfig): ReactElement {
 		});
 		observer.observe(vegaEl.current);
 
+		const allRenderId = addEventListen('renderAllVega', () => {
+			renderVega();
+		});
+
 		return () => {
 			observer.disconnect();
 			if (VegaResult.current.destory) {
 				VegaResult.current.destory.finalize();
 			}
+			removeEventListen('renderAllVega', allRenderId);
 		};
 	});
 

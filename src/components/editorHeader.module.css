@@ -2,7 +2,7 @@
   width: 200px;
 }
 
-.header-container {
+.header-content {
   display: flex;
   flex-direction: row;
   height: 70px;
@@ -11,6 +11,9 @@
   box-sizing: border-box;
   padding: 1rem;
   align-items: center;
+}
+
+.header-container {
   margin-bottom: 1rem;
 }
 

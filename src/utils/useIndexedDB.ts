@@ -80,7 +80,7 @@ export default class ThemeIndexedDB {
 	async putValue(
 		storeName: string,
 		themeName: string,
-		themeValue: string,
+		themeValue: any,
 	): Promise<string> {
 		return new Promise((resolve, reject) => {
 			const request: IDBRequest<IDBValidKey> | undefined =
@@ -93,7 +93,8 @@ export default class ThemeIndexedDB {
 					resolve('write data success');
 				};
 
-				request.onerror = function () {
+				request.onerror = function (e) {
+					console.log(e);
 					reject(new Error('write data failed'));
 				};
 			}
@@ -103,7 +104,7 @@ export default class ThemeIndexedDB {
 	async addValue(
 		storeName: string,
 		themeName: string,
-		themeValue: string,
+		themeValue: any,
 	): Promise<string> {
 		return new Promise((resolve, reject) => {
 			const request: IDBRequest<IDBValidKey> | undefined =
@@ -121,6 +122,20 @@ export default class ThemeIndexedDB {
 				};
 			}
 		});
+	}
+
+	async updateData(ObjectStoreName: string, key: string, val: any) {
+		const themeDb = new ThemeIndexedDB(this.DBName, 1);
+		await themeDb.open();
+		await themeDb.putValue(ObjectStoreName, key, val);
+		themeDb.close();
+	}
+
+	async addData(ObjectStoreName: string, key: string, val: any) {
+		const themeDb = new ThemeIndexedDB(this.DBName, 1);
+		await themeDb.open();
+		await themeDb.addValue(ObjectStoreName, key, val);
+		themeDb.close();
 	}
 
 	close(): void {

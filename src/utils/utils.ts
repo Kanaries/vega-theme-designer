@@ -42,12 +42,13 @@ export function addEventListen(
 
 export function emitEvent(
 	eventName: string,
-	val: Record<string, string>,
+	val?: Record<string, string>,
 ): void {
+	const opt = val || {};
 	if (eventMap[eventName]) {
 		eventMap[eventName].forEach(item => {
 			if (item) {
-				item(val);
+				item(opt);
 			}
 		});
 	}

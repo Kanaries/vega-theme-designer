@@ -4,6 +4,7 @@ import React, {
 } from 'react';
 import {type Config} from 'vega-embed';
 import {ThemeProvider} from '@fluentui/react';
+import html2canvas from 'html2canvas';
 import style from './App.module.css';
 import VegaView from './components/vegaView';
 import Editor from './components/Editor';
@@ -12,14 +13,14 @@ import EditorHeader from './components/editorHeader';
 import {configMap, schemaUrl} from './utils/loadVegaResource';
 import ThemeIndexedDB from './utils/useIndexedDB';
 import {setEditorValue} from './components/editorValue';
-import {emitEvent} from './utils/utils';
-
-const DataBaseName = 'vega_theme_designer';
-const ObjectStoreName = 'ThemeTable';
+import {addEventListen, emitEvent, removeEventListen} from './utils/utils';
+import {DataBaseName, ThemeObjectStoreName, PreViewObjectStoreName} from './config/dbConfig';
 
 function App(): ReactElement {
 	const [rendererValue, setRendererValue] = useState<Renderers>('canvas');
 	const [vegaVal, setVegaVal] = useState<Config>({});
+	const [vegaContainerBackground, setVegaContainerBackground] =
+		useState<string | undefined>(undefined);
 
 	const editorContainer =
 		useRef<HTMLDivElement | undefined>(undefined) as MutableRefObject<HTMLDivElement>;
@@ -34,6 +35,7 @@ function App(): ReactElement {
 		try {
 			const vegaThemeVal: Config = JSON.parse(val) as Config;
 			setVegaVal(vegaThemeVal);
+			setVegaContainerBackground(vegaThemeVal.background as string);
 		} catch { /* empty */ }
 	}
 
@@ -41,7 +43,7 @@ function App(): ReactElement {
 		const themeDb = new ThemeIndexedDB(DataBaseName, 1);
 		await themeDb.open();
 		const result: Record<string, string> | undefined =
-			await themeDb.getValue(ObjectStoreName, themeName);
+			await themeDb.getValue(ThemeObjectStoreName, themeName);
 		themeDb.close();
 
 		if (result) {
@@ -50,8 +52,6 @@ function App(): ReactElement {
 				val: result.value,
 			});
 		} else {
-			// const config: Config = await configMap[themeName];
-			// const value = JSON.stringify(configMap[themeName], null, 4);
 			const value = await configMap[themeName];
 			setEditorValue(value);
 			emitEvent('editorChange', {
@@ -95,6 +95,40 @@ function App(): ReactElement {
 
 	const editorChangeCallback = useCallback(editorChange, []);
 
+	const vegaContainerStyle: React.CSSProperties = {
+		backgroundColor: vegaContainerBackground,
+	};
+
+	const preViewToIndexDB = (opt: Record<string, string>) => {
+		const {type, themeName} = opt;
+		const vegaPreviewDom = vegaContainer.current;
+		html2canvas(vegaPreviewDom, {
+			width: vegaPreviewDom.scrollWidth, // 画布的宽
+			height: vegaPreviewDom.scrollHeight + 70, // 画布的高
+			windowHeight: vegaPreviewDom.scrollHeight + 70,
+			windowWidth: vegaPreviewDom.scrollWidth + editorContainer.current.scrollWidth,
+			scale: 1, // 处理模糊问题
+			useCORS: true, // 开启跨域，这个是必须的
+	}).then(async data => {
+			const dataUrl = data.toDataURL('image/jpeg');
+			if (type === 'add') {
+				const themeDb = new ThemeIndexedDB(DataBaseName, 1);
+				await themeDb.addData(PreViewObjectStoreName, themeName, dataUrl);
+			}
+			if (type === 'update') {
+				const themeDb = new ThemeIndexedDB(DataBaseName, 1);
+				await themeDb.updateData(PreViewObjectStoreName, themeName, dataUrl);
+			}
+		});
+	};
+
+	useEffect(() => {
+		const eventIndex = addEventListen('vegaCharts2Image', preViewToIndexDB);
+		return () => {
+			removeEventListen('vegaCharts2Image', eventIndex);
+		};
+	});
+
 	return (
 		<ThemeProvider theme={mainTheme}>
 			<div className={style['app-container']}>
@@ -123,6 +157,8 @@ function App(): ReactElement {
 					<div
 						className={style['charts-container']}
 						ref={vegaContainer}
+						style={vegaContainerStyle}
+						id="vegaChartsContainer"
 					>
 						{
 							Object.keys(schemaUrl).map(

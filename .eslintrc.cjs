@@ -73,6 +73,7 @@ module.exports = {
 				format: ['PascalCase', 'camelCase', 'UPPER_CASE'],
 			},
 		],
+		'no-shadow': 'off',
 		'no-param-reassign': ['error', {props: false}],
 	},
 };

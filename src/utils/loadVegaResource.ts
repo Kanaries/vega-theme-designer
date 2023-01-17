@@ -1,17 +1,55 @@
 import {Loader, loader} from 'vega';
 
-export const configUrl: Record<string, string> = {
-	default: '/vega/vegaConfig/default.json',
-	excel: '/vega/vegaConfig/excel.json',
-	dark: '/vega/vegaConfig/dark.json',
-	fivethirtyeight: '/vega/vegaConfig/fivethirtyeight.json',
-	googlecharts: '/vega/vegaConfig/googlecharts.json',
-	latimes: '/vega/vegaConfig/latimes.json',
-	powerbi: '/vega/vegaConfig/powerbi.json',
-	quartz: '/vega/vegaConfig/quartz.json',
-	urbaninstitute: '/vega/vegaConfig/urbaninstitute.json',
-	vox: '/vega/vegaConfig/vox.json',
-	ggplot2: '/vega/vegaConfig/ggplot2.json',
+interface vegaUrlConfig {
+	config: string;
+	preview: string;
+}
+
+export const themeConfigList: Record<string, vegaUrlConfig> = {
+	default: {
+		config: '/vega/vegaConfig/default.json',
+		preview: '/vega/vegaPreview/default.jpg',
+	},
+	excel: {
+		config: '/vega/vegaConfig/excel.json',
+		preview: '/vega/vegaPreview/excel.jpg',
+	},
+	dark: {
+		config: '/vega/vegaConfig/dark.json',
+		preview: '/vega/vegaPreview/dark.jpg',
+	},
+	fivethirtyeight: {
+		config: '/vega/vegaConfig/fivethirtyeight.json',
+		preview: '/vega/vegaPreview/fivethirtyeight.jpg',
+	},
+	googlecharts: {
+		config: '/vega/vegaConfig/googlecharts.json',
+		preview: '/vega/vegaPreview/googlecharts.jpg',
+	},
+	latimes: {
+		config: '/vega/vegaConfig/latimes.json',
+		preview: '/vega/vegaPreview/latimes.jpg',
+	},
+	powerbi: {
+		config: '/vega/vegaConfig/powerbi.json',
+		preview: '/vega/vegaPreview/powerbi.jpg',
+	},
+	quartz: {
+		config: '/vega/vegaConfig/quartz.json',
+		preview: '/vega/vegaPreview/quartz.jpg',
+	},
+	urbaninstitute: {
+		config: '/vega/vegaConfig/urbaninstitute.json',
+		preview: '/vega/vegaPreview/urbaninstitute.jpg',
+	},
+	vox: {
+		config: '/vega/vegaConfig/vox.json',
+		preview: '/vega/vegaPreview/vox.jpg',
+	},
+	ggplot2: {
+		config: '/vega/vegaConfig/ggplot2.json',
+		preview: '/vega/vegaPreview/ggplot2.jpg',
+	},
 };
 
 export const schemaUrl: Record<string, string> = {
@@ -36,6 +74,16 @@ const handle: ProxyHandler<Record<string, string>> = {
 	},
 };
 
+function getThemeConfigList(): Record<string, string> {
+	const configUrl: Record<string, string> = {};
+	Object.keys(themeConfigList).forEach(item => {
+		configUrl[item] = themeConfigList[item].config;
+	});
+	return configUrl;
+}
+
+const themeConfigUrlList = getThemeConfigList();
+
 export const schemaMap = new Proxy({...schemaUrl}, handle);
 
-export const configMap = new Proxy({...configUrl}, handle);
+export const configMap = new Proxy({...themeConfigUrlList}, handle);
