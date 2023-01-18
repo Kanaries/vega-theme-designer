@@ -14,6 +14,7 @@
                 "confirm": "确认",
                 "errorTip": "主题名称已存在"
             }
-        }
+        },
+        "saveSuccess": "保存成功"
     }
 }

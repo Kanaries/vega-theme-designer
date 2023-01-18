@@ -18,6 +18,7 @@ import {
 	type ITooltipHostStyles,
 	TooltipDelay,
 	DirectionalHint,
+	MessageBarType,
 } from '@fluentui/react';
 import {type Renderers} from 'vega';
 import {useTranslation} from 'react-i18next';
@@ -65,7 +66,7 @@ async function getRestThemeList(callback: (restList: IDropdownOption[]) => void)
 	callback(restThemeList);
 }
 
-function savePreviewOnIndexDB(type: string, themeName: string) {
+function savePreviewOnIndexDB(type: string, themeName: string, tip: string) {
 	emitEvent('renderAllVega');
 	addEventListen('storePreview', () => {
 		emitEvent('vegaCharts2Image', {
@@ -73,13 +74,17 @@ function savePreviewOnIndexDB(type: string, themeName: string) {
 			themeName,
 		});
 		removeAllEvent('storePreview');
+		emitEvent('notification', {
+			msg: tip,
+			type: MessageBarType.success,
+		});
 	});
 }
 
-async function saveTheme(themeName: string, config: string): Promise<void> {
+async function saveTheme(themeName: string, config: string, tip: string): Promise<void> {
 	const themeDb = new ThemeIndexedDB(DataBaseName, 1);
 	await themeDb.updateData(ThemeObjectStoreName, themeName, config);
-	savePreviewOnIndexDB('update', themeName);
+	savePreviewOnIndexDB('update', themeName, tip);
 }
 
 async function savaAs(
@@ -151,7 +156,7 @@ function editorHeader(props: EditorHeader): ReactElement {
 		setErrMsg('');
 		setModalShow(false);
 		setThemeOptions([...themeOptions, {key: themeName, text: themeName}]);
-		savePreviewOnIndexDB('add', themeName);
+		savePreviewOnIndexDB('add', themeName, t('vegaDesigner.saveSuccess'));
 	}
 
 	function saveAsBtnClick(): void {
@@ -233,7 +238,7 @@ function editorHeader(props: EditorHeader): ReactElement {
 				<DefaultButton
 					className={style.button}
 					onClick={() => {
-					saveTheme(theme.current, getEditorValue());
+					saveTheme(theme.current, getEditorValue(), t('vegaDesigner.saveSuccess'));
 				}}
 				>
 					{t('vegaDesigner.saveTheme')}

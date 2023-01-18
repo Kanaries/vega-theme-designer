@@ -61,7 +61,7 @@ function Editor(props: EditorProps): ReactElement {
 
 	// 监听外部对编辑器值的改变
 	useEffect(() => {
-		const callbackIndex = addEventListen('editorChange', opt => {
+		const callbackIndex = addEventListen('editorChange', (opt: Record<string, string>) => {
 			if (editor && opt.val) {
 				editor.setValue(opt.val);
 			}

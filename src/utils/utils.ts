@@ -22,15 +22,9 @@ export function debounce(
 	};
 }
 
-const eventMap: Record<
-	string,
-	Array<((val: Record<string, string>) => void) | undefined>
-> = {};
+const eventMap: Record<string, Array<Function | undefined>> = {};
 
-export function addEventListen(
-	eventName: string,
-	func: (val: Record<string, string>) => void,
-): number {
+export function addEventListen(eventName: string, func: Function): number {
 	if (eventMap[eventName]) {
 		eventMap[eventName].push(func);
 	} else {
@@ -40,10 +34,7 @@ export function addEventListen(
 	return eventMap[eventName].length - 1;
 }
 
-export function emitEvent(
-	eventName: string,
-	val?: Record<string, string>,
-): void {
+export function emitEvent(eventName: string, val?: any): void {
 	const opt = val || {};
 	if (eventMap[eventName]) {
 		eventMap[eventName].forEach(item => {

@@ -15,6 +15,7 @@ import ThemeIndexedDB from './utils/useIndexedDB';
 import {setEditorValue} from './components/editorValue';
 import {addEventListen, emitEvent, removeEventListen} from './utils/utils';
 import {DataBaseName, ThemeObjectStoreName, PreViewObjectStoreName} from './config/dbConfig';
+import MessageTip from './components/messageTip';
 
 function App(): ReactElement {
 	const [rendererValue, setRendererValue] = useState<Renderers>('canvas');
@@ -136,6 +137,7 @@ function App(): ReactElement {
 	return (
 		<ThemeProvider theme={mainTheme}>
 			<div className={style['app-container']}>
+				<MessageTip />
 				<EditorHeader
 					onRendererChange={rendererChangeHeaderCallback}
 					onThemeChange={themeChangeHeaderCallback}
