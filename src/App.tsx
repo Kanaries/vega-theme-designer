@@ -103,11 +103,14 @@ function App(): ReactElement {
 	const preViewToIndexDB = (opt: Record<string, string>) => {
 		const {type, themeName} = opt;
 		const vegaPreviewDom = vegaContainer.current;
+		const windowWidth =
+			document.documentElement.clientWidth +
+			(vegaPreviewDom.scrollWidth - vegaPreviewDom.offsetWidth) * 2;
 		html2canvas(vegaPreviewDom, {
 			width: vegaPreviewDom.scrollWidth, // 画布的宽
-			height: vegaPreviewDom.scrollHeight + 70, // 画布的高
-			windowHeight: vegaPreviewDom.scrollHeight + 70,
-			windowWidth: vegaPreviewDom.scrollWidth + editorContainer.current.scrollWidth,
+			height: vegaPreviewDom.scrollHeight, // 画布的高
+			windowHeight: vegaPreviewDom.scrollHeight + 86,
+			windowWidth,
 			scale: 1, // 处理模糊问题
 			useCORS: true, // 开启跨域，这个是必须的
 	}).then(async data => {

@@ -25,6 +25,9 @@ function Editor(props: EditorProps): ReactElement {
 				value: '{}',
 				language: 'json',
 				automaticLayout: true,
+				minimap: {
+					enabled: false, // 不要小地图
+				},
 			}));
 		}
 
