@@ -6,6 +6,8 @@ export type IDBRequestEvent = {
 	target: IDBEventTarget;
 } & Event;
 
+type GetAllRequest = IDBRequest<Array<Record<string, string>>> | undefined;
+
 export default class ThemeIndexedDB {
 	DBName = '';
 
@@ -59,9 +61,9 @@ export default class ThemeIndexedDB {
 
 	async getAll(storeName: string): Promise<Array<Record<string, string>>> {
 		return new Promise((resolve, reject) => {
-			const request:
-				| IDBRequest<Array<Record<string, string>>>
-				| undefined = this.DataBase?.transaction([storeName])
+			const request: GetAllRequest = this.DataBase?.transaction([
+				storeName,
+			])
 				.objectStore(storeName)
 				.getAll();
 

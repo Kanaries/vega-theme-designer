@@ -36,14 +36,14 @@ function messageTip() {
 		<div className={style['message-bar']}>
 			{
 				isShowMessage ?
-				(
-					<MessageBar
-						messageBarType={messageBarType.current}
-						isMultiline={false}
-					>
-						{message.current}
-					</MessageBar>
-				) : null
+					(
+						<MessageBar
+							messageBarType={messageBarType.current}
+							isMultiline={false}
+						>
+							{message.current}
+						</MessageBar>
+					) : null
 			}
 		</div>
 	);

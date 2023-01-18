@@ -34,7 +34,7 @@ module.exports = {
 		quotes: ['error', 'single'],
 		'no-tabs': ['error', {allowIndentationTabs: true}],
 		'func-names': ['error', 'never'],
-		indent: 'off',
+		indent: ['error', 'tab'],
 		'import/extensions': [
 			'error',
 			'ignorePackages',
@@ -57,8 +57,13 @@ module.exports = {
 		'react/jsx-indent-props': ['error', 'tab'],
 		'operator-linebreak': ['error', 'after'],
 		'object-curly-spacing': ['error', 'never'],
-		'jsx-a11y/no-static-element-interactions': 'off',
-		'@typescript-eslint/ban-types': 'off',
+		'jsx-a11y/no-static-element-interactions': [
+			'error',
+			{
+				handlers: ['onClick'],
+				allowExpressionValues: true,
+			},
+		],
 		'@typescript-eslint/no-this-alias': [
 			'error',
 			{
@@ -73,7 +78,16 @@ module.exports = {
 				format: ['PascalCase', 'camelCase', 'UPPER_CASE'],
 			},
 		],
-		'no-shadow': 'off',
 		'no-param-reassign': ['error', {props: false}],
+		'@typescript-eslint/ban-types': [
+			'error',
+			{
+				types: {
+					// un-ban a type that's banned by default
+					Function: false,
+				},
+				extendDefaults: true,
+			},
+		],
 	},
 };

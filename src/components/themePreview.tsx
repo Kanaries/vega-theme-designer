@@ -34,11 +34,11 @@ function ThemePreview(props: ThemePreviewProps) {
 	useEffect(() => {
 		updatePreviewImgFromIndexDB(imageUrlKey);
 	});
-  return (
-	<div>
-		<img src="" alt="" style={style} ref={previewImg} />
-	</div>
-  );
+	return (
+		<div>
+			<img src="" alt="" style={style} ref={previewImg} />
+		</div>
+	);
 }
 
 export default React.memo(ThemePreview);

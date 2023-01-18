@@ -114,7 +114,7 @@ function App(): ReactElement {
 			windowWidth,
 			scale: 1, // 处理模糊问题
 			useCORS: true, // 开启跨域，这个是必须的
-	}).then(async data => {
+		}).then(async data => {
 			const dataUrl = data.toDataURL('image/jpeg');
 			if (type === 'add') {
 				const themeDb = new ThemeIndexedDB(DataBaseName, 1);

@@ -166,10 +166,10 @@ function editorHeader(props: EditorHeader): ReactElement {
 	const TooltipHostStyles: Partial<ITooltipHostStyles> =
 	{
 		root: {
-					width: '100%',
-					height: '100%',
-					display: 'flex',
-					'align-items': 'center',
+			width: '100%',
+			height: '100%',
+			display: 'flex',
+			'align-items': 'center',
 		},
 	};
 
@@ -208,11 +208,11 @@ function editorHeader(props: EditorHeader): ReactElement {
 					className={style.dropdown}
 					onRenderOption={themeOptionRender}
 					onChange={(e, opt) => {
-					if (opt && onThemeChange) {
-						onThemeChange(opt.text);
-						theme.current = opt.text;
-					}
-				}}
+						if (opt && onThemeChange) {
+							onThemeChange(opt.text);
+							theme.current = opt.text;
+						}
+					}}
 				/>
 				<Label className={style.label}>
 					{t('vegaDesigner.renderer')}
@@ -222,32 +222,32 @@ function editorHeader(props: EditorHeader): ReactElement {
 					options={rendererOptions}
 					className={style.dropdown}
 					onChange={(e, opt) => {
-					if (opt && onRendererChange) {
-						onRendererChange(opt.text as Renderers);
-					}
-				}}
+						if (opt && onRendererChange) {
+							onRendererChange(opt.text as Renderers);
+						}
+					}}
 				/>
 				<DefaultButton
 					className={style.button}
 					onClick={() => {
-					downloadJson(getEditorValue(), theme.current);
-				}}
+						downloadJson(getEditorValue(), theme.current);
+					}}
 				>
 					{t('vegaDesigner.exportBtn')}
 				</DefaultButton>
 				<DefaultButton
 					className={style.button}
 					onClick={() => {
-					saveTheme(theme.current, getEditorValue(), t('vegaDesigner.saveSuccess'));
-				}}
+						saveTheme(theme.current, getEditorValue(), t('vegaDesigner.saveSuccess'));
+					}}
 				>
 					{t('vegaDesigner.saveTheme')}
 				</DefaultButton>
 				<DefaultButton
 					className={style.button}
 					onClick={() => {
-					setModalShow(true);
-				}}
+						setModalShow(true);
+					}}
 				>
 					{t('vegaDesigner.saveAs.btn')}
 				</DefaultButton>
@@ -269,27 +269,27 @@ function editorHeader(props: EditorHeader): ReactElement {
 							label={t('vegaDesigner.saveAs.Modal.inputLabel') as unknown as string}
 							errorMessage={errMsg}
 							onChange={(e: FormEvent, val?: string) => {
-							setErrMsg('');
-							if (val !== undefined) {
-								newTheme.current = val;
-							}
-						}}
+								setErrMsg('');
+								if (val !== undefined) {
+									newTheme.current = val;
+								}
+							}}
 						/>
 					</div>
 					<div className={ModalStyle.footer}>
 						<PrimaryButton
 							className={style.button}
 							onClick={() => {
-							saveAsBtnClick();
-						}}
+								saveAsBtnClick();
+							}}
 						>
 							{t('vegaDesigner.saveAs.Modal.confirm')}
 						</PrimaryButton>
 						<DefaultButton
 							className={style.button}
 							onClick={() => {
-							setModalShow(false);
-						}}
+								setModalShow(false);
+							}}
 						>
 							{t('vegaDesigner.saveAs.Modal.cancel')}
 						</DefaultButton>
