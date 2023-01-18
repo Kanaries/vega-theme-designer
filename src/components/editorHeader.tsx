@@ -28,7 +28,7 @@ import ModalStyle from './modal.module.css';
 import {getEditorValue} from './editorValue';
 import ThemePreview from './themePreview';
 import {themeConfigList} from '../utils/loadVegaResource';
-import {emitEvent} from '../utils/utils';
+import {addEventListen, emitEvent, removeAllEvent} from '../utils/utils';
 import {DataBaseName, ThemeObjectStoreName, PreViewObjectStoreName} from '../config/dbConfig';
 
 type EditorHeader = {
@@ -67,12 +67,13 @@ async function getRestThemeList(callback: (restList: IDropdownOption[]) => void)
 
 function savePreviewOnIndexDB(type: string, themeName: string) {
 	emitEvent('renderAllVega');
-	window.setTimeout(() => {
+	addEventListen('storePreview', () => {
 		emitEvent('vegaCharts2Image', {
 			type,
 			themeName,
 		});
-	}, 1000);
+		removeAllEvent('storePreview');
+	});
 }
 
 async function saveTheme(themeName: string, config: string): Promise<void> {

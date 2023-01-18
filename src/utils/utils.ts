@@ -64,3 +64,9 @@ export function removeEventListen(
 		}
 	}
 }
+
+export function removeAllEvent(eventName: string): void {
+	if (eventMap[eventName]) {
+		eventMap[eventName] = [];
+	}
+}

@@ -3,13 +3,14 @@ import vegaEmbed, {type VisualizationSpec, type Config, type Result} from 'vega-
 import React, {
 	useRef, useEffect, type MutableRefObject, ReactElement,
 } from 'react';
-import {schemaMap} from '../utils/loadVegaResource';
-import {addEventListen, removeEventListen} from '../utils/utils';
+import {schemaMap, schemaUrl} from '../utils/loadVegaResource';
+import {addEventListen, emitEvent, removeEventListen} from '../utils/utils';
 
 type VegaConfig = {
 	schemaName: string,
 	renderer: vega.Renderers;
 	config: Config;
+	renderNum: MutableRefObject<number>;
 };
 
 function vegaView(props: VegaConfig): ReactElement {
@@ -20,9 +21,11 @@ function vegaView(props: VegaConfig): ReactElement {
 	const isVisible = useRef<boolean>(false);
 	const VegaResult = useRef <Record<string, Result>>({});
 
-	const {schemaName, renderer, config} = props;
+	const {
+		schemaName, renderer, config, renderNum,
+	} = props;
 
-	async function renderVega() {
+	async function renderVega(type?: string) {
 		if (!hasRenderer.current) {
 			hasRenderer.current = true;
 			const spec: VisualizationSpec = JSON.parse(await schemaMap[schemaName]);
@@ -31,11 +34,16 @@ function vegaView(props: VegaConfig): ReactElement {
 				actions: false,
 				renderer,
 			});
-			console.log('render');
+			renderNum.current += 1;
 			vegaEl.current.style.width = '';
 			vegaEl.current.style.height = '';
 			vegaEl.current.style.width = `${vegaEl.current.clientWidth}px`;
 			vegaEl.current.style.height = `${vegaEl.current.clientHeight}px`;
+		}
+		if (type === 'renderAll') {
+			if (renderNum.current >= Object.keys(schemaUrl).length) {
+				emitEvent('storePreview');
+			}
 		}
 	}
 
@@ -55,7 +63,7 @@ function vegaView(props: VegaConfig): ReactElement {
 		observer.observe(vegaEl.current);
 
 		const allRenderId = addEventListen('renderAllVega', () => {
-			renderVega();
+			renderVega('renderAll');
 		});
 
 		return () => {
@@ -69,6 +77,7 @@ function vegaView(props: VegaConfig): ReactElement {
 
 	useEffect(() => {
 		hasRenderer.current = false;
+		renderNum.current = 0;
 		if (isVisible.current) {
 			renderVega();
 		}

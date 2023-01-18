@@ -28,6 +28,7 @@ function App(): ReactElement {
 		useRef<HTMLDivElement | undefined>(undefined) as MutableRefObject<HTMLDivElement>;
 	const silder =
 		useRef<HTMLDivElement | undefined>(undefined) as MutableRefObject<HTMLDivElement>;
+	const currentRenderVega = useRef<number>(0);
 
 	let x: number;
 
@@ -164,6 +165,7 @@ function App(): ReactElement {
 							Object.keys(schemaUrl).map(
 								(item: string) => (
 									<VegaView
+										renderNum={currentRenderVega}
 										config={vegaVal}
 										key={item}
 										renderer={rendererValue}

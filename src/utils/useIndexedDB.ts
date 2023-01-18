@@ -93,8 +93,7 @@ export default class ThemeIndexedDB {
 					resolve('write data success');
 				};
 
-				request.onerror = function (e) {
-					console.log(e);
+				request.onerror = function () {
 					reject(new Error('write data failed'));
 				};
 			}
