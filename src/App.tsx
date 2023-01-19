@@ -3,8 +3,9 @@ import React, {
 	useRef, useState, useCallback, type MutableRefObject, ReactElement, useEffect,
 } from 'react';
 import {type Config} from 'vega-embed';
-import {ThemeProvider} from '@fluentui/react';
+import {MessageBarType, ThemeProvider} from '@fluentui/react';
 import html2canvas from 'html2canvas';
+import {useTranslation} from 'react-i18next';
 import style from './App.module.css';
 import VegaView from './components/vegaView';
 import Editor from './components/Editor';
@@ -31,6 +32,8 @@ function App(): ReactElement {
 		useRef<HTMLDivElement | undefined>(undefined) as MutableRefObject<HTMLDivElement>;
 	const currentRenderVega = useRef<number>(0);
 
+	const {t} = useTranslation();
+
 	let x: number;
 
 	function editorChange(val: string): void {
@@ -42,22 +45,28 @@ function App(): ReactElement {
 	}
 
 	async function getTheme(themeName: string): Promise<void> {
-		const themeDb = new ThemeIndexedDB(DataBaseName, 1);
-		await themeDb.open();
-		const result: Record<string, string> | undefined =
-			await themeDb.getValue(ThemeObjectStoreName, themeName);
-		themeDb.close();
-
-		if (result) {
-			setEditorValue(result.value);
-			emitEvent('editorChange', {
-				val: result.value,
-			});
-		} else {
-			const value = await configMap[themeName];
-			setEditorValue(value);
-			emitEvent('editorChange', {
-				val: value,
+		try {
+			const themeDb = new ThemeIndexedDB(DataBaseName, 1);
+			await themeDb.open();
+			const result: Record<string, string> | undefined =
+				await themeDb.getValue(ThemeObjectStoreName, themeName);
+			themeDb.close();
+			if (result) {
+				setEditorValue(result.value);
+				emitEvent('editorChange', {
+					val: result.value,
+				});
+			} else {
+				const value = await configMap[themeName];
+				setEditorValue(value);
+				emitEvent('editorChange', {
+					val: value,
+				});
+			}
+		} catch {
+			emitEvent('notification', {
+				msg: t('vegaDesigner.indexDbGetError'),
+				type: MessageBarType.error,
 			});
 		}
 	}
@@ -132,7 +141,7 @@ function App(): ReactElement {
 		return () => {
 			removeEventListen('vegaCharts2Image', eventIndex);
 		};
-	});
+	}, []);
 
 	return (
 		<ThemeProvider theme={mainTheme}>
@@ -141,6 +150,7 @@ function App(): ReactElement {
 				<EditorHeader
 					onRendererChange={rendererChangeHeaderCallback}
 					onThemeChange={themeChangeHeaderCallback}
+					renderer={rendererValue}
 				/>
 
 				<div className={style['design-container']}>

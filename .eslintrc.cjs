@@ -83,7 +83,6 @@ module.exports = {
 			'error',
 			{
 				types: {
-					// un-ban a type that's banned by default
 					Function: false,
 				},
 				extendDefaults: true,

@@ -73,7 +73,7 @@ function vegaView(props: VegaConfig): ReactElement {
 			}
 			removeEventListen('renderAllVega', allRenderId);
 		};
-	});
+	}, []);
 
 	useEffect(() => {
 		hasRenderer.current = false;

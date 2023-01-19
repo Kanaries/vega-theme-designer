@@ -19,6 +19,7 @@ import {
 	TooltipDelay,
 	DirectionalHint,
 	MessageBarType,
+	FontIcon,
 } from '@fluentui/react';
 import {type Renderers} from 'vega';
 import {useTranslation} from 'react-i18next';
@@ -29,12 +30,15 @@ import ModalStyle from './modal.module.css';
 import {getEditorValue} from './editorValue';
 import ThemePreview from './themePreview';
 import {themeConfigList} from '../utils/loadVegaResource';
-import {addEventListen, emitEvent, removeAllEvent} from '../utils/utils';
+import {
+	addEventListen, emitEvent, removeAllEvent, removeEventListen,
+} from '../utils/utils';
 import {DataBaseName, ThemeObjectStoreName, PreViewObjectStoreName} from '../config/dbConfig';
 
 type EditorHeader = {
 	onThemeChange?: (val: string) => void;
 	onRendererChange?: (val: Renderers) => void;
+	renderer: Renderers
 };
 
 const defaultThemeList = Object.keys(themeConfigList);
@@ -67,6 +71,7 @@ async function getRestThemeList(callback: (restList: IDropdownOption[]) => void)
 }
 
 function savePreviewOnIndexDB(type: string, themeName: string, tip: string) {
+	emitEvent('switchRender2Canvas');
 	emitEvent('renderAllVega');
 	addEventListen('storePreview', () => {
 		emitEvent('vegaCharts2Image', {
@@ -103,7 +108,7 @@ async function savaAs(
 }
 
 function editorHeader(props: EditorHeader): ReactElement {
-	const {onThemeChange, onRendererChange} = props;
+	const {onThemeChange, onRendererChange, renderer} = props;
 
 	const [themeOptions, setThemeOptions] = useState<IDropdownOption[]>([
 		...defaultThemeList.map(item => {
@@ -117,8 +122,9 @@ function editorHeader(props: EditorHeader): ReactElement {
 	const [modalShow, setModalShow] = useState<boolean>(false);
 	const [errMsg, setErrMsg] = useState<string>('');
 
-	const theme = useRef<string>('default');
+	const [theme, setTheme] = useState<string>('default');
 	const newTheme = useRef<string>('');
+	const lastRemoveTheme = useRef<string>('');
 
 	const {t, i18n} = useTranslation();
 
@@ -146,6 +152,14 @@ function editorHeader(props: EditorHeader): ReactElement {
 				setThemeOptions([...themeOptions, ...restList]);
 			},
 		);
+		const eventIndex = addEventListen('switchRender2Canvas', () => {
+			if (onRendererChange) {
+				onRendererChange('canvas');
+			}
+		});
+		return () => {
+			removeEventListen('switchRender2Canvas', eventIndex);
+		};
 	}, []);
 
 	function themeHasSame(): void {
@@ -161,6 +175,20 @@ function editorHeader(props: EditorHeader): ReactElement {
 
 	function saveAsBtnClick(): void {
 		savaAs(newTheme.current, getEditorValue(), saveAsSuccess, themeHasSame);
+	}
+
+	async function removeTheme(themeName: string): Promise<void> {
+		lastRemoveTheme.current = themeName;
+		const themeDb = new ThemeIndexedDB(DataBaseName, 1);
+		await themeDb.removeData(ThemeObjectStoreName, themeName);
+		await themeDb.removeData(PreViewObjectStoreName, themeName);
+		const removeIndex = themeOptions.findIndex(item => item.text === themeName);
+		themeOptions.splice(removeIndex, 1);
+		setThemeOptions([...themeOptions]);
+		emitEvent('notification', {
+			msg: t('vegaDesigner.removeSuccess'),
+			type: MessageBarType.success,
+		});
 	}
 
 	const TooltipHostStyles: Partial<ITooltipHostStyles> =
@@ -187,8 +215,23 @@ function editorHeader(props: EditorHeader): ReactElement {
 					delay={TooltipDelay.zero}
 					directionalHint={DirectionalHint.rightBottomEdge}
 				>
-					<div aria-describedby={elId}>
-						<span>{opt?.text}</span>
+					<div className={style['dropdown-item']}>
+						<div aria-describedby={elId}>
+							<span>{opt.text}</span>
+						</div>
+						{
+							defaultThemeList.includes(opt.text) ? null :
+								(
+									<div
+										onClick={() => {
+											removeTheme(opt.text);
+										}}
+										aria-hidden="true"
+									>
+										<FontIcon iconName="Cancel" />
+									</div>
+								)
+						}
 					</div>
 				</TooltipHost>
 			);
@@ -207,10 +250,17 @@ function editorHeader(props: EditorHeader): ReactElement {
 					options={themeOptions}
 					className={style.dropdown}
 					onRenderOption={themeOptionRender}
+					selectedKey={theme}
 					onChange={(e, opt) => {
 						if (opt && onThemeChange) {
-							onThemeChange(opt.text);
-							theme.current = opt.text;
+							const isNotRemove = lastRemoveTheme.current !== opt.text;
+							if (isNotRemove) {
+								onThemeChange(opt.text);
+								setTheme(opt.text);
+							} else {
+								onThemeChange('default');
+								setTheme('default');
+							}
 						}
 					}}
 				/>
@@ -221,6 +271,7 @@ function editorHeader(props: EditorHeader): ReactElement {
 				<Dropdown
 					options={rendererOptions}
 					className={style.dropdown}
+					selectedKey={renderer}
 					onChange={(e, opt) => {
 						if (opt && onRendererChange) {
 							onRendererChange(opt.text as Renderers);
@@ -230,7 +281,7 @@ function editorHeader(props: EditorHeader): ReactElement {
 				<DefaultButton
 					className={style.button}
 					onClick={() => {
-						downloadJson(getEditorValue(), theme.current);
+						downloadJson(getEditorValue(), theme);
 					}}
 				>
 					{t('vegaDesigner.exportBtn')}
@@ -238,7 +289,7 @@ function editorHeader(props: EditorHeader): ReactElement {
 				<DefaultButton
 					className={style.button}
 					onClick={() => {
-						saveTheme(theme.current, getEditorValue(), t('vegaDesigner.saveSuccess'));
+						saveTheme(theme, getEditorValue(), t('vegaDesigner.saveSuccess'));
 					}}
 				>
 					{t('vegaDesigner.saveTheme')}

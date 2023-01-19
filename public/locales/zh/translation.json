@@ -15,6 +15,8 @@
                 "errorTip": "主题名称已存在"
             }
         },
-        "saveSuccess": "保存成功"
+        "saveSuccess": "保存成功",
+        "removeSuccess": "删除成功",
+        "indexDbGetError": "获取数据失败"
     }
 }

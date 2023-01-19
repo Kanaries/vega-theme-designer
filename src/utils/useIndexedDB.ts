@@ -125,6 +125,25 @@ export default class ThemeIndexedDB {
 		});
 	}
 
+	async removeValue(storeName: string, themeName: string): Promise<string> {
+		return new Promise((resolve, reject) => {
+			const request: IDBRequest<undefined> | undefined =
+				this.DataBase?.transaction([storeName], 'readwrite')
+					.objectStore(storeName)
+					.delete(themeName);
+
+			if (request != null) {
+				request.onsuccess = function () {
+					resolve(themeName);
+				};
+
+				request.onerror = function () {
+					reject(new Error('write data failed'));
+				};
+			}
+		});
+	}
+
 	async updateData(ObjectStoreName: string, key: string, val: any) {
 		const themeDb = new ThemeIndexedDB(this.DBName, 1);
 		await themeDb.open();
@@ -136,6 +155,13 @@ export default class ThemeIndexedDB {
 		const themeDb = new ThemeIndexedDB(this.DBName, 1);
 		await themeDb.open();
 		await themeDb.addValue(ObjectStoreName, key, val);
+		themeDb.close();
+	}
+
+	async removeData(ObjectStoreName: string, key: string) {
+		const themeDb = new ThemeIndexedDB(this.DBName, 1);
+		await themeDb.open();
+		await themeDb.removeValue(ObjectStoreName, key);
 		themeDb.close();
 	}
 

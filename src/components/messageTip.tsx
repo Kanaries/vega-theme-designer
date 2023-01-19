@@ -31,7 +31,7 @@ function messageTip() {
 		return () => {
 			removeEventListen('notification', index);
 		};
-	});
+	}, []);
 	return (
 		<div className={style['message-bar']}>
 			{

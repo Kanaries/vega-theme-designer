@@ -57,15 +57,16 @@ function Editor(props: EditorProps): ReactElement {
 		return () => {
 			editor?.dispose();
 		};
-	}, [monacoEl.current]);
+	});
 
 	// 监听外部对编辑器值的改变
 	useEffect(() => {
-		const callbackIndex = addEventListen('editorChange', (opt: Record<string, string>) => {
+		const changeEditorValue = (opt: Record<string, string>) => {
 			if (editor && opt.val) {
 				editor.setValue(opt.val);
 			}
-		});
+		};
+		const callbackIndex = addEventListen('editorChange', changeEditorValue);
 
 		return () => {
 			removeEventListen('editorChange', callbackIndex);
