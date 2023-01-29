@@ -1,0 +1,22 @@
+{
+    "vegaDesigner": {
+        "theme": "主题",
+        "renderer": "渲染方式",
+        "exportBtn": "导出主题",
+        "saveTheme": "保存主题",
+        "language": "语言",
+        "saveAs": {
+            "btn": "另存为",
+            "Modal": {
+                "title": "请输入主题名称",
+                "inputLabel": "主题名",
+                "cancel": "取消",
+                "confirm": "确认",
+                "errorTip": "主题名称已存在"
+            }
+        },
+        "saveSuccess": "保存成功",
+        "removeSuccess": "删除成功",
+        "indexDbGetError": "获取数据失败"
+    }
+}
