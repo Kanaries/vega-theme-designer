@@ -17,6 +17,9 @@
         },
         "saveSuccess": "保存成功",
         "removeSuccess": "删除成功",
-        "indexDbGetError": "获取数据失败"
+        "indexDbGetError": "获取数据失败",
+        "defaultTheme": "内置主题",
+        "customTheme": "我的主题",
+        "login": "登录"
     }
 }

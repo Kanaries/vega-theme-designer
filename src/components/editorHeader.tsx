@@ -20,11 +20,12 @@ import {
 	DirectionalHint,
 	MessageBarType,
 	FontIcon,
+	DropdownMenuItemType,
 } from '@fluentui/react';
 import {type Renderers} from 'vega';
 import {useTranslation} from 'react-i18next';
 import style from './editorHeader.module.css';
-import downloadJson from '../utils/download';
+// import downloadJson from '../utils/download';
 import ThemeIndexedDB, {type IDBRequestEvent} from '../utils/useIndexedDB';
 import ModalStyle from './modal.module.css';
 import {getEditorValue} from './editorValue';
@@ -34,6 +35,7 @@ import {
 	addEventListen, emitEvent, removeAllEvent, removeEventListen,
 } from '../utils/utils';
 import {DataBaseName, ThemeObjectStoreName, PreViewObjectStoreName} from '../config/dbConfig';
+import {useUserStore} from '../store/userStore';
 
 type EditorHeader = {
 	onThemeChange?: (val: string) => void;
@@ -101,30 +103,30 @@ async function savaAs(
 	const themeDb = new ThemeIndexedDB(DataBaseName, 1);
 	await themeDb.open();
 	themeDb.addValue(ThemeObjectStoreName, themeName, config)
-		.then(onSuccess, onErr)
+		.then(onSuccess)
+		.catch(onErr)
 		.finally(() => {
 			themeDb.close();
 		});
 }
 
+const defaultThemeOptions = defaultThemeList.map<IDropdownOption>(item => {
+	if (item === 'default') {
+		return {key: item, text: item, selected: true};
+	}
+
+	return {key: item, text: item};
+});
+
 function editorHeader(props: EditorHeader): ReactElement {
 	const {onThemeChange, onRendererChange, renderer} = props;
 
-	const [themeOptions, setThemeOptions] = useState<IDropdownOption[]>([
-		...defaultThemeList.map(item => {
-			if (item === 'default') {
-				return {key: item, text: item, selected: true};
-			}
-
-			return {key: item, text: item};
-		}),
-	]);
+	const [themeOptions, setThemeOptions] = useState<IDropdownOption[]>([]);
 	const [modalShow, setModalShow] = useState<boolean>(false);
 	const [errMsg, setErrMsg] = useState<string>('');
 
 	const [theme, setTheme] = useState<string>('default');
 	const newTheme = useRef<string>('');
-	const lastRemoveTheme = useRef<string>('');
 
 	const {t, i18n} = useTranslation();
 
@@ -170,6 +172,7 @@ function editorHeader(props: EditorHeader): ReactElement {
 		setErrMsg('');
 		setModalShow(false);
 		setThemeOptions([...themeOptions, {key: themeName, text: themeName}]);
+		setTheme(themeName);
 		savePreviewOnIndexDB('add', themeName, t('vegaDesigner.saveSuccess'));
 	}
 
@@ -178,13 +181,11 @@ function editorHeader(props: EditorHeader): ReactElement {
 	}
 
 	async function removeTheme(themeName: string): Promise<void> {
-		lastRemoveTheme.current = themeName;
+		setTheme('default');
+		setThemeOptions(themeOptions.filter(item => item.text !== themeName));
 		const themeDb = new ThemeIndexedDB(DataBaseName, 1);
 		await themeDb.removeData(ThemeObjectStoreName, themeName);
 		await themeDb.removeData(PreViewObjectStoreName, themeName);
-		const removeIndex = themeOptions.findIndex(item => item.text === themeName);
-		themeOptions.splice(removeIndex, 1);
-		setThemeOptions([...themeOptions]);
 		emitEvent('notification', {
 			msg: t('vegaDesigner.removeSuccess'),
 			type: MessageBarType.success,
@@ -202,8 +203,12 @@ function editorHeader(props: EditorHeader): ReactElement {
 	};
 
 	const themeOptionRender: IRenderFunction<IDropdownOption> =
-	(opt?: IDropdownOption): ReactElement | null => {
+	(opt, defaultRenderer): ReactElement | null => {
 		if (opt) {
+			const {itemType = DropdownMenuItemType.Normal} = opt;
+			if (itemType !== DropdownMenuItemType.Normal) {
+				return defaultRenderer?.(opt) ?? null;
+			}
 			const elId = `theme_renderer_item_${opt.text}`;
 			return (
 				<TooltipHost
@@ -239,6 +244,10 @@ function editorHeader(props: EditorHeader): ReactElement {
 		return null;
 	};
 
+	const isDefaultTheme = defaultThemeList.includes(theme);
+
+	const {userName} = useUserStore();
+
 	return (
 		<div className={style['header-container']}>
 			<div className={style['header-content']}>
@@ -247,19 +256,21 @@ function editorHeader(props: EditorHeader): ReactElement {
 					:
 				</Label>
 				<Dropdown
-					options={themeOptions}
+					options={[
+						{key: 'group:custom', text: t('vegaDesigner.customTheme'), itemType: DropdownMenuItemType.Header},
+						...themeOptions,
+						{key: 'divider', text: '-', itemType: DropdownMenuItemType.Divider},
+						{key: 'group:default', text: t('vegaDesigner.defaultTheme'), itemType: DropdownMenuItemType.Header},
+						...defaultThemeOptions,
+					]}
 					className={style.dropdown}
 					onRenderOption={themeOptionRender}
 					selectedKey={theme}
 					onChange={(e, opt) => {
-						if (opt && onThemeChange) {
-							const isNotRemove = lastRemoveTheme.current !== opt.text;
-							if (isNotRemove) {
+						if (opt && onThemeChange && opt.text !== theme) {
+							if ([...themeOptions, ...defaultThemeOptions].some(thm => thm.text === opt.text)) {
 								onThemeChange(opt.text);
 								setTheme(opt.text);
-							} else {
-								onThemeChange('default');
-								setTheme('default');
 							}
 						}
 					}}
@@ -278,16 +289,17 @@ function editorHeader(props: EditorHeader): ReactElement {
 						}
 					}}
 				/>
-				<DefaultButton
+				{/* <DefaultButton
 					className={style.button}
 					onClick={() => {
 						downloadJson(getEditorValue(), theme);
 					}}
 				>
 					{t('vegaDesigner.exportBtn')}
-				</DefaultButton>
+				</DefaultButton> */}
 				<DefaultButton
 					className={style.button}
+					disabled={isDefaultTheme}
 					onClick={() => {
 						saveTheme(theme, getEditorValue(), t('vegaDesigner.saveSuccess'));
 					}}
@@ -307,6 +319,21 @@ function editorHeader(props: EditorHeader): ReactElement {
 						menuProps={langOption}
 						iconProps={emojiIcon}
 					/>
+				</div>
+				<div>
+					{userName === null && (
+						<DefaultButton
+							className={style.button}
+							onClick={() => {
+								// TODO: 登录
+							}}
+						>
+							{t('vegaDesigner.login')}
+						</DefaultButton>
+					)}
+					{userName !== null && (
+						<span>{userName}</span>
+					)}
 				</div>
 				<Modal isOpen={modalShow} containerClassName={ModalStyle.container}>
 					<div className={ModalStyle.header}>

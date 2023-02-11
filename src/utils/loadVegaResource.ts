@@ -1,11 +1,11 @@
 import {Loader, loader} from 'vega';
 
-interface vegaUrlConfig {
+interface VegaUrlConfig {
 	config: string;
 	preview: string;
 }
 
-export const themeConfigList: Record<string, vegaUrlConfig> = {
+export const themeConfigList: Record<string, VegaUrlConfig> = {
 	default: {
 		config: '/vega/vegaConfig/default.json',
 		preview: '/vega/vegaPreview/default.jpg',
@@ -64,7 +64,7 @@ export const schemaUrl: Record<string, string> = {
 
 const vegaLoader: Loader = loader();
 
-const handle: ProxyHandler<Record<string, string>> = {
+const handle: ProxyHandler<Record<string, string | Promise<string>>> = {
 	async get(target: Record<string, string>, property: string) {
 		const cacheProperty = `_${property}`;
 		if (!target[cacheProperty]) {

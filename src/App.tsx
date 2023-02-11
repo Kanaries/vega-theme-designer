@@ -17,6 +17,7 @@ import {setEditorValue} from './components/editorValue';
 import {addEventListen, emitEvent, removeEventListen} from './utils/utils';
 import {DataBaseName, ThemeObjectStoreName, PreViewObjectStoreName} from './config/dbConfig';
 import MessageTip from './components/messageTip';
+import {useUserStoreProvider} from './store/userStore';
 
 function App(): ReactElement {
 	const [rendererValue, setRendererValue] = useState<Renderers>('canvas');
@@ -143,56 +144,60 @@ function App(): ReactElement {
 		};
 	}, []);
 
+	const UserStoreProvider = useUserStoreProvider();
+
 	return (
-		<ThemeProvider theme={mainTheme}>
-			<div className={style['app-container']}>
-				<MessageTip />
-				<EditorHeader
-					onRendererChange={rendererChangeHeaderCallback}
-					onThemeChange={themeChangeHeaderCallback}
-					renderer={rendererValue}
-				/>
-
-				<div className={style['design-container']}>
-					<div
-						className={style['editor-container']}
-						ref={editorContainer}
-					>
-						<Editor
-							containerEl={editorContainer}
-							onChange={editorChangeCallback}
-						/>
-					</div>
-
-					<div
-						className={style.resizer}
-						onMouseDown={sliderDown}
-						ref={silder}
+		<UserStoreProvider>
+			<ThemeProvider theme={mainTheme}>
+				<div className={style['app-container']}>
+					<MessageTip />
+					<EditorHeader
+						onRendererChange={rendererChangeHeaderCallback}
+						onThemeChange={themeChangeHeaderCallback}
+						renderer={rendererValue}
 					/>
 
-					<div
-						className={style['charts-container']}
-						ref={vegaContainer}
-						style={vegaContainerStyle}
-						id="vegaChartsContainer"
-					>
-						{
-							Object.keys(schemaUrl).map(
-								(item: string) => (
-									<VegaView
-										renderNum={currentRenderVega}
-										config={vegaVal}
-										key={item}
-										renderer={rendererValue}
-										schemaName={item}
-									/>
-								),
-							)
-						}
+					<div className={style['design-container']}>
+						<div
+							className={style['editor-container']}
+							ref={editorContainer}
+						>
+							<Editor
+								containerEl={editorContainer}
+								onChange={editorChangeCallback}
+							/>
+						</div>
+
+						<div
+							className={style.resizer}
+							onMouseDown={sliderDown}
+							ref={silder}
+						/>
+
+						<div
+							className={style['charts-container']}
+							ref={vegaContainer}
+							style={vegaContainerStyle}
+							id="vegaChartsContainer"
+						>
+							{
+								Object.keys(schemaUrl).map(
+									(item: string) => (
+										<VegaView
+											renderNum={currentRenderVega}
+											config={vegaVal}
+											key={item}
+											renderer={rendererValue}
+											schemaName={item}
+										/>
+									),
+								)
+							}
+						</div>
 					</div>
 				</div>
-			</div>
-		</ThemeProvider>
+			</ThemeProvider>
+		</UserStoreProvider>
 	);
 }
 

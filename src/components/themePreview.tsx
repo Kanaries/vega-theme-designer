@@ -36,7 +36,7 @@ function ThemePreview(props: ThemePreviewProps) {
 	});
 	return (
 		<div>
-			<img src="" alt="" style={style} ref={previewImg} />
+			<img src="" alt="" width="350" height="600" style={style} ref={previewImg} />
 		</div>
 	);
 }
