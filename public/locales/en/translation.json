@@ -3,7 +3,8 @@
         "theme": "Theme",
         "renderer": "Renderer",
         "exportBtn": "Export Theme",
-        "saveTheme": "Save Theme",
+        "saveTheme": "Save",
+        "deleteTheme": "Delete",
         "language": "language",
         "saveAs": {
             "btn": "Save As",

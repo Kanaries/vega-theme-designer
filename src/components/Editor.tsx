@@ -79,7 +79,7 @@ function Editor(props: EditorProps): ReactElement {
 
 	useEffect(() => {
 		if (curTheme) {
-			editor?.setValue(curTheme.configs);
+			editor?.setValue(curTheme.config);
 		} else {
 			editor?.setValue('{}');
 		}

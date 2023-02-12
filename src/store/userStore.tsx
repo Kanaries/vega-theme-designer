@@ -1,9 +1,11 @@
+import {MessageBarType} from '@fluentui/react';
 import {
 	type IReactionDisposer, makeAutoObservable, reaction, runInAction, observable,
 } from 'mobx';
 import React, {
 	createContext, FC, useCallback, useContext, useMemo, PropsWithChildren,
 } from 'react';
+import {emitEvent} from '../utils/eventEmit';
 import {defaultThemes, themeConfigList} from '../utils/loadVegaResource';
 import request, {getServerUrl} from '../utils/request';
 
@@ -23,15 +25,31 @@ export const KanariesPath = (
 
 export interface ITheme {
 	name: string;
-	configs: string;
+	config: string;
 	previewSrc: string;
-	isDefault?: boolean;
+	isDefault: boolean;
+	id: string;
+}
+
+export interface IThemeOnCloud {
+	id: string;
+	name: string;
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	config: Record<string, any>;
+	cover: {
+		uploadUrl: string;
+		storageId: string;
+		downloadUrl: string;
+	};
+	isFavorite: boolean;
+	favoritesTotal: boolean;
+	owner: string;
 }
 
 export default class UserStore {
 	public loginStatus: 'pending' | 'loggedIn' | 'loggedOut';
 
-	public user: IUserInfo | null;
+	public user: (IUserInfo & { workspaceName: string }) | null;
 
 	public themes: readonly ITheme[] = [];
 
@@ -44,10 +62,10 @@ export default class UserStore {
 		return [...this.themes, ...this.defaultThemes];
 	}
 
-	public themeName = Object.keys(themeConfigList)[0];
+	public themeId = Object.keys(themeConfigList)[0];
 
 	public get curTheme() {
-		return this.allThemes.find(thm => thm.name === this.themeName) ?? null;
+		return this.allThemes.find(thm => thm.id === this.themeId) ?? null;
 	}
 
 	protected readonly disposers: IReactionDisposer[];
@@ -69,13 +87,13 @@ export default class UserStore {
 				}
 			}),
 			reaction(() => this.themes, () => {
-				if (!this.allThemes.find(thm => thm.name === this.themeName)) {
-					this.themeName = this.defaultThemes[0].name;
+				if (!this.allThemes.find(thm => thm.id === this.themeId)) {
+					this.themeId = this.defaultThemes[0].name;
 				}
 			}),
-			reaction(() => this.themeName, themeName => {
-				if (!this.allThemes.find(thm => thm.name === themeName)) {
-					this.themeName = this.defaultThemes[0].name;
+			reaction(() => this.themeId, themeId => {
+				if (!this.allThemes.find(thm => thm.id === themeId)) {
+					this.themeId = this.defaultThemes[0].name;
 				}
 			}),
 		];
@@ -108,9 +126,9 @@ export default class UserStore {
 		return result.success;
 	}
 
-	public setTheme(themeName: string) {
-		if (this.allThemes.find(thm => thm.name === themeName)) {
-			this.themeName = themeName;
+	public setTheme(themeId: string) {
+		if (this.allThemes.find(thm => thm.id === themeId)) {
+			this.themeId = themeId;
 		}
 	}
 
@@ -122,16 +140,20 @@ export default class UserStore {
 			const url = getServerUrl('/api/ce/personal');
 			const result = await request.get<never, IUserInfo>(url);
 			if (result !== null) {
+				const wspUrl = getServerUrl('/api/ce/simpleInfo/workspace');
+				// eslint-disable-next-line max-len
+				const wsp = await request.get<{userName: string}, {name: string}>(wspUrl, {userName: result.userName});
 				runInAction(() => {
-					this.user = result;
+					this.user = {
+						...result,
+						workspaceName: wsp.name,
+					};
 					if (!result.avatarURL) {
 						this.customAvatar({
 							isDefaultAvatar: true,
 							defaultAvatarUrl: 'https://foghorn-assets.s3.ap-northeast-1.amazonaws.com/avatar/small/avatar-B-01.png',
 						});
-						return;
 					}
-					this.user.avatarURL = result.avatarURL;
 				});
 			}
 		} catch (error) {
@@ -149,10 +171,20 @@ export default class UserStore {
 				return;
 			}
 			const url = getServerUrl('/api/ce/theme/list');
-			const result = await request.get<never, { themeList: ITheme[] }>(url);
+			// eslint-disable-next-line no-spaced-func, func-call-spacing
+			const result = await request.get<never, { themeList: IThemeOnCloud[] }>(url);
 			if (result !== null) {
 				runInAction(() => {
-					this.themes = result.themeList;
+					this.themes = result.themeList.map(thm => {
+						const res = {
+							...thm,
+							isDefault: false,
+							config: '{}',
+							previewSrc: thm.cover.downloadUrl,
+						};
+						res.config = JSON.stringify(thm.config, null, 2);
+						return res;
+					});
 				});
 			}
 		} catch (error) {
@@ -218,6 +250,57 @@ export default class UserStore {
 			runInAction(() => {
 				this.loginStatus = 'loggedOut';
 			});
+		}
+	}
+
+	// eslint-disable-next-line max-len
+	public async saveTheme(name: string, configRaw: string, cover: File, id?: string | undefined): Promise<boolean> {
+		const workspaceName = this.user?.workspaceName;
+		if (!workspaceName) {
+			return false;
+		}
+		try {
+			const config = JSON.parse(configRaw);
+			const url = getServerUrl('/api/ce/theme');
+			// eslint-disable-next-line no-spaced-func, func-call-spacing, max-len
+			const result = await request.post<{id?: string, workspaceName: string; name: string; config: object; cover: {name: string; size: number; type: string}}, IThemeOnCloud>(url, {
+				id,
+				workspaceName,
+				name,
+				config,
+				cover: {
+					type: cover.type,
+					name: cover.name,
+					size: cover.size,
+				},
+			});
+			const fileUploadRes = await fetch(result.cover.uploadUrl, {
+				method: 'PUT',
+				body: cover,
+			});
+			if (!fileUploadRes.ok) {
+				throw new Error(await fileUploadRes.text());
+			}
+			const reportUploadSuccessApiUrl = getServerUrl('/api/ce/upload/callback');
+			// eslint-disable-next-line function-paren-newline
+			await request.get<{ storageId: string; status: 1 }, { downloadUrl: string }>(
+				reportUploadSuccessApiUrl, {storageId: result.cover.storageId, status: 1},
+			// eslint-disable-next-line function-paren-newline
+			);
+			emitEvent('notification', {
+				msg: 'Saved',
+				type: MessageBarType.success,
+			});
+			await this.updateThemes();
+			return true;
+		} catch (error) {
+			// eslint-disable-next-line no-console
+			console.error(error);
+			emitEvent('notification', {
+				msg: `Failed to save ${error}`,
+				type: MessageBarType.error,
+			});
+			return false;
 		}
 	}
 }

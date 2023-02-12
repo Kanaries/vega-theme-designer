@@ -3,7 +3,8 @@
         "theme": "主题",
         "renderer": "渲染方式",
         "exportBtn": "导出主题",
-        "saveTheme": "保存主题",
+        "saveTheme": "保存",
+        "deleteTheme": "删除",
         "language": "语言",
         "saveAs": {
             "btn": "另存为",

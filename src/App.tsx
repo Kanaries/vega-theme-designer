@@ -11,9 +11,6 @@ import Editor from './components/Editor';
 import {mainTheme} from './theme';
 import EditorHeader from './components/editorHeader';
 import {schemaUrl} from './utils/loadVegaResource';
-import ThemeIndexedDB from './utils/useIndexedDB';
-import {addEventListen, removeEventListen} from './utils/utils';
-import {DataBaseName, PreViewObjectStoreName} from './config/dbConfig';
 import MessageTip from './components/messageTip';
 import {useUserStoreProvider} from './store/userStore';
 
@@ -74,37 +71,30 @@ function App(): ReactElement {
 		backgroundColor: vegaContainerBackground,
 	};
 
-	const preViewToIndexDB = (opt: Record<string, string>) => {
-		const {type, themeName} = opt;
+	const getPreviewFile = useCallback(async (): Promise<File | null> => {
 		const vegaPreviewDom = vegaContainer.current;
 		const windowWidth =
 			document.documentElement.clientWidth +
 			(vegaPreviewDom.scrollWidth - vegaPreviewDom.offsetWidth) * 2;
-		html2canvas(vegaPreviewDom, {
+		return html2canvas(vegaPreviewDom, {
 			width: vegaPreviewDom.scrollWidth, // 画布的宽
 			height: vegaPreviewDom.scrollHeight, // 画布的高
 			windowHeight: vegaPreviewDom.scrollHeight + 86,
 			windowWidth,
 			scale: 1, // 处理模糊问题
 			useCORS: true, // 开启跨域，这个是必须的
-		}).then(async data => {
-			const dataUrl = data.toDataURL('image/jpeg');
-			if (type === 'add') {
-				const themeDb = new ThemeIndexedDB(DataBaseName, 1);
-				await themeDb.addData(PreViewObjectStoreName, themeName, dataUrl);
+		}).then<File | null>(async data => {
+			const blob = await new Promise<Blob | null>(resolve => {
+				data.toBlob(d => {
+					resolve(d);
+				}, 'image/png');
+			});
+			if (!blob) {
+				return null;
 			}
-			if (type === 'update') {
-				const themeDb = new ThemeIndexedDB(DataBaseName, 1);
-				await themeDb.updateData(PreViewObjectStoreName, themeName, dataUrl);
-			}
+			const file = new File([blob], 'preview.png', {type: 'image/png'});
+			return file;
 		});
-	};
-
-	useEffect(() => {
-		const eventIndex = addEventListen('vegaCharts2Image', preViewToIndexDB);
-		return () => {
-			removeEventListen('vegaCharts2Image', eventIndex);
-		};
 	}, []);
 
 	const UserStoreProvider = useUserStoreProvider();
@@ -117,6 +107,7 @@ function App(): ReactElement {
 					<EditorHeader
 						onRendererChange={rendererChangeHeaderCallback}
 						renderer={rendererValue}
+						getPreviewFile={getPreviewFile}
 					/>
 
 					<div className={style['design-container']}>

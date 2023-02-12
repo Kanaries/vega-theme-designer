@@ -1,5 +1,6 @@
+/* eslint-disable no-tabs */
 import React, {
-	type FormEvent, useEffect, useState, useRef, ReactElement,
+	type FormEvent, useEffect, useState, ReactElement,
 } from 'react';
 import {
 	Dropdown,
@@ -19,7 +20,6 @@ import {
 	TooltipDelay,
 	DirectionalHint,
 	MessageBarType,
-	FontIcon,
 	DropdownMenuItemType,
 	Persona,
 	PersonaSize,
@@ -29,20 +29,19 @@ import {type Renderers} from 'vega';
 import {useTranslation} from 'react-i18next';
 import style from './editorHeader.module.css';
 // import downloadJson from '../utils/download';
-import ThemeIndexedDB from '../utils/useIndexedDB';
 import ModalStyle from './modal.module.css';
 import {getEditorValue} from './editorValue';
 import ThemePreview from './themePreview';
 import {themeConfigList} from '../utils/loadVegaResource';
 import {
-	addEventListen, emitEvent, removeAllEvent, removeEventListen,
+	addEventListen, emitEvent, removeEventListen,
 } from '../utils/utils';
-import {DataBaseName, ThemeObjectStoreName, PreViewObjectStoreName} from '../config/dbConfig';
 import {KanariesPath, useUserStore} from '../store/userStore';
 
 type EditorHeader = {
 	onRendererChange?: (val: Renderers) => void;
-	renderer: Renderers
+	renderer: Renderers;
+	getPreviewFile: () => Promise<File | null>;
 };
 
 const defaultThemeList = Object.keys(themeConfigList);
@@ -51,44 +50,6 @@ const rendererOptions = [
 	{key: 'canvas', text: 'canvas', selected: true},
 	{key: 'svg', text: 'svg'},
 ];
-
-function savePreviewOnIndexDB(type: string, themeName: string, tip: string) {
-	emitEvent('switchRender2Canvas');
-	emitEvent('renderAllVega');
-	addEventListen('storePreview', () => {
-		emitEvent('vegaCharts2Image', {
-			type,
-			themeName,
-		});
-		removeAllEvent('storePreview');
-		emitEvent('notification', {
-			msg: tip,
-			type: MessageBarType.success,
-		});
-	});
-}
-
-async function saveTheme(themeName: string, config: string, tip: string): Promise<void> {
-	const themeDb = new ThemeIndexedDB(DataBaseName, 1);
-	await themeDb.updateData(ThemeObjectStoreName, themeName, config);
-	savePreviewOnIndexDB('update', themeName, tip);
-}
-
-async function savaAs(
-	themeName: string,
-	config: string,
-	onSuccess: (res: string) => void,
-	onErr: () => void,
-): Promise<void> {
-	const themeDb = new ThemeIndexedDB(DataBaseName, 1);
-	await themeDb.open();
-	themeDb.addValue(ThemeObjectStoreName, themeName, config)
-		.then(onSuccess)
-		.catch(onErr)
-		.finally(() => {
-			themeDb.close();
-		});
-}
 
 const defaultThemeOptions = defaultThemeList.map<IDropdownOption>(item => {
 	if (item === 'default') {
@@ -99,18 +60,22 @@ const defaultThemeOptions = defaultThemeList.map<IDropdownOption>(item => {
 });
 
 function editorHeader(props: EditorHeader): ReactElement {
-	const {onRendererChange, renderer} = props;
+	const {onRendererChange, renderer, getPreviewFile} = props;
 
 	const [modalShow, setModalShow] = useState<boolean>(false);
 	const [errMsg, setErrMsg] = useState<string>('');
 
-	const newTheme = useRef<string>('');
+	const [asName, setAsName] = useState<string>('');
+
+	useEffect(() => {
+		setAsName('');
+	}, [modalShow]);
 
 	const {t, i18n} = useTranslation();
 
 	const userStore = useUserStore();
 	const {
-		user, loginStatus, themes, themeName, curTheme,
+		user, loginStatus, themes, themeId, curTheme, allThemes,
 	} = userStore;
 
 	const switchLang: (
@@ -142,32 +107,29 @@ function editorHeader(props: EditorHeader): ReactElement {
 		};
 	}, []);
 
-	function themeHasSame(): void {
-		setErrMsg(t('vegaDesigner.saveAs.Modal.errorTip') as unknown as string);
-	}
+	// async function removeTheme(name: string): Promise<void> {
+	// 	userStore.updateThemes();
+	// 	const themeDb = new ThemeIndexedDB(DataBaseName, 1);
+	// 	await themeDb.removeData(ThemeObjectStoreName, name);
+	// 	await themeDb.removeData(PreViewObjectStoreName, name);
+	// 	emitEvent('notification', {
+	// 		msg: t('vegaDesigner.removeSuccess'),
+	// 		type: MessageBarType.success,
+	// 	});
+	// }
 
-	function saveAsSuccess(name: string): void {
-		setErrMsg('');
+	async function saveTheme(name: string, id?: string | undefined): Promise<void> {
+		const config = getEditorValue();
+		const cover = await getPreviewFile();
+		if (!cover) {
+			emitEvent('notification', {
+				msg: 'Failed to generate preview',
+				type: MessageBarType.error,
+			});
+			return;
+		}
+		await userStore.saveTheme(name, config, cover, id);
 		setModalShow(false);
-		userStore.updateThemes().then(() => {
-			userStore.setTheme(name);
-		});
-		savePreviewOnIndexDB('add', name, t('vegaDesigner.saveSuccess'));
-	}
-
-	function saveAsBtnClick(): void {
-		savaAs(newTheme.current, getEditorValue(), saveAsSuccess, themeHasSame);
-	}
-
-	async function removeTheme(name: string): Promise<void> {
-		userStore.updateThemes();
-		const themeDb = new ThemeIndexedDB(DataBaseName, 1);
-		await themeDb.removeData(ThemeObjectStoreName, name);
-		await themeDb.removeData(PreViewObjectStoreName, name);
-		emitEvent('notification', {
-			msg: t('vegaDesigner.removeSuccess'),
-			type: MessageBarType.success,
-		});
 	}
 
 	const TooltipHostStyles: Partial<ITooltipHostStyles> =
@@ -188,33 +150,22 @@ function editorHeader(props: EditorHeader): ReactElement {
 				return defaultRenderer?.(opt) ?? null;
 			}
 			const elId = `theme_renderer_item_${opt.text}`;
+			const which = allThemes.find(thm => thm.id === opt.key);
 			return (
 				<TooltipHost
-					content={<ThemePreview themeName={opt.text} />}
+					content={<ThemePreview themeId={opt.key as string} />}
 					id={elId}
 					calloutProps={{gapSpace: 0}}
 					styles={TooltipHostStyles}
-					closeDelay={0}
+					closeDelay={TooltipDelay.zero}
 					delay={TooltipDelay.zero}
 					directionalHint={DirectionalHint.rightBottomEdge}
 				>
 					<div className={style['dropdown-item']}>
-						<div aria-describedby={elId}>
-							<span>{opt.text}</span>
+						<div className={style['dropdown-option']} aria-describedby={elId}>
+							{which ? <img alt="" className={style['dropdown-img']} src={which.previewSrc} /> : null}
+							<span className={style['dropdown-text']}>{opt.text}</span>
 						</div>
-						{
-							defaultThemeList.includes(opt.text) ? null :
-								(
-									<div
-										onClick={() => {
-											removeTheme(opt.text);
-										}}
-										aria-hidden="true"
-									>
-										<FontIcon iconName="Cancel" />
-									</div>
-								)
-						}
 					</div>
 				</TooltipHost>
 			);
@@ -226,7 +177,7 @@ function editorHeader(props: EditorHeader): ReactElement {
 
 	const isLoggedIn = loginStatus === 'loggedIn';
 
-	const customThemes = themes.map<IDropdownOption>(thm => ({key: thm.name, text: thm.name}));
+	const customThemes = themes.map<IDropdownOption>(thm => ({key: thm.id, text: thm.name}));
 
 	return (
 		<div className={style['header-container']}>
@@ -245,12 +196,10 @@ function editorHeader(props: EditorHeader): ReactElement {
 					]}
 					className={style.dropdown}
 					onRenderOption={themeOptionRender}
-					selectedKey={themeName}
+					selectedKey={themeId}
 					onChange={(e, opt) => {
-						if (opt && opt.text !== themeName) {
-							if ([...customThemes, ...defaultThemeOptions].some(thm => thm.text === opt.text)) {
-								userStore.setTheme(opt.text);
-							}
+						if (opt && opt.key !== themeId) {
+							userStore.setTheme(opt.key as string);
 						}
 					}}
 				/>
@@ -278,10 +227,8 @@ function editorHeader(props: EditorHeader): ReactElement {
 				</DefaultButton> */}
 				<DefaultButton
 					className={style.button}
-					disabled={isDefaultTheme || !isLoggedIn}
-					onClick={() => {
-						saveTheme(themeName, getEditorValue(), t('vegaDesigner.saveSuccess'));
-					}}
+					disabled={isDefaultTheme || !isLoggedIn || !curTheme?.id}
+					onClick={() => curTheme && saveTheme(themeId, curTheme.id)}
 				>
 					{t('vegaDesigner.saveTheme')}
 				</DefaultButton>
@@ -294,6 +241,15 @@ function editorHeader(props: EditorHeader): ReactElement {
 				>
 					{t('vegaDesigner.saveAs.btn')}
 				</DefaultButton>
+				{/* <DefaultButton
+					className={style['button-dangerous']}
+					disabled={isDefaultTheme || !isLoggedIn}
+					onClick={() => {
+						removeTheme(themeName);
+					}}
+				>
+					{t('vegaDesigner.deleteTheme')}
+				</DefaultButton> */}
 				<div className={style.lang}>
 					<IconButton
 						menuProps={langOption}
@@ -303,7 +259,6 @@ function editorHeader(props: EditorHeader): ReactElement {
 				<div>
 					{!isLoggedIn && (
 						<DefaultButton
-							className={style['login-button']}
 							disabled={loginStatus !== 'loggedOut'}
 							onClick={() => {
 								userStore.signUp();
@@ -333,20 +288,18 @@ function editorHeader(props: EditorHeader): ReactElement {
 						<TextField
 							label={t('vegaDesigner.saveAs.Modal.inputLabel') as unknown as string}
 							errorMessage={errMsg}
+							value={asName}
 							onChange={(e: FormEvent, val?: string) => {
 								setErrMsg('');
-								if (val !== undefined) {
-									newTheme.current = val;
-								}
+								setAsName(val ?? '');
 							}}
 						/>
 					</div>
 					<div className={ModalStyle.footer}>
 						<PrimaryButton
 							className={style.button}
-							onClick={() => {
-								saveAsBtnClick();
-							}}
+							disabled={!isLoggedIn || !asName}
+							onClick={() => saveTheme(asName)}
 						>
 							{t('vegaDesigner.saveAs.Modal.confirm')}
 						</PrimaryButton>

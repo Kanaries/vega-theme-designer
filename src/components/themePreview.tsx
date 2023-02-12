@@ -3,22 +3,27 @@ import {observer} from 'mobx-react-lite';
 import {useUserStore} from '../store/userStore';
 
 interface ThemePreviewProps {
-	themeName: string;
+	themeId: string;
 }
 
-const style: React.CSSProperties = {
-	maxWidth: '350px',
-	minHeight: '600px',
+const imgStyle: React.CSSProperties = {
+	flexGrow: 0,
+	flexShrink: 0,
+	display: 'block',
+	width: '100%',
+	height: '100%',
+	maxWidth: '30vw',
+	maxHeight: '70vh',
 };
 
 function ThemePreview(props: ThemePreviewProps) {
-	const {themes} = useUserStore();
-	const {themeName} = props;
-	const theme = themes.find(thm => thm.name === themeName);
+	const {allThemes} = useUserStore();
+	const {themeId} = props;
+	const theme = allThemes.find(thm => thm.id === themeId);
 
 	return theme ? (
 		<div>
-			<img alt={theme.name} width="350" height="600" style={style} src={theme.previewSrc} />
+			<img alt="" style={imgStyle} src={theme.previewSrc} />
 		</div>
 	) : null;
 }

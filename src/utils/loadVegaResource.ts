@@ -98,10 +98,12 @@ export const configMap = new Proxy({...themeConfigUrlList}, handle);
 
 export const defaultThemes: readonly ITheme[] = Object.keys(getThemeConfigList()).map<ITheme>(
 	key => ({
+		id: key,
 		name: key,
-		get configs() {
+		get config() {
 			return themeConfigList[key].data ?? '{}';
 		},
 		previewSrc: themeConfigList[key].preview,
+		isDefault: true,
 	}),
 );
