@@ -21,12 +21,15 @@ import {
 	MessageBarType,
 	FontIcon,
 	DropdownMenuItemType,
+	Persona,
+	PersonaSize,
 } from '@fluentui/react';
+import {observer} from 'mobx-react-lite';
 import {type Renderers} from 'vega';
 import {useTranslation} from 'react-i18next';
 import style from './editorHeader.module.css';
 // import downloadJson from '../utils/download';
-import ThemeIndexedDB, {type IDBRequestEvent} from '../utils/useIndexedDB';
+import ThemeIndexedDB from '../utils/useIndexedDB';
 import ModalStyle from './modal.module.css';
 import {getEditorValue} from './editorValue';
 import ThemePreview from './themePreview';
@@ -35,10 +38,9 @@ import {
 	addEventListen, emitEvent, removeAllEvent, removeEventListen,
 } from '../utils/utils';
 import {DataBaseName, ThemeObjectStoreName, PreViewObjectStoreName} from '../config/dbConfig';
-import {useUserStore} from '../store/userStore';
+import {KanariesPath, useUserStore} from '../store/userStore';
 
 type EditorHeader = {
-	onThemeChange?: (val: string) => void;
 	onRendererChange?: (val: Renderers) => void;
 	renderer: Renderers
 };
@@ -49,28 +51,6 @@ const rendererOptions = [
 	{key: 'canvas', text: 'canvas', selected: true},
 	{key: 'svg', text: 'svg'},
 ];
-
-async function getRestThemeList(callback: (restList: IDropdownOption[]) => void): Promise<void> {
-	const callbackFun = function (event: IDBRequestEvent) {
-		// 数据库创建或升级的时候会触发
-		const db = event.target.result; // 数据库对象
-		db.createObjectStore(ThemeObjectStoreName, {
-			keyPath: 'themeName', // 这是主键
-		});
-		db.createObjectStore(PreViewObjectStoreName, {
-			keyPath: 'themeName', // 这是主键
-		});
-	} as (e: Event) => void;
-	const themeDb = new ThemeIndexedDB(DataBaseName, 1);
-	await themeDb.open(callbackFun);
-	const allTheme = await themeDb.getAll(ThemeObjectStoreName);
-	const restTheme = allTheme.filter(item => !defaultThemeList.includes(item?.themeName));
-	const restThemeList: IDropdownOption[] = restTheme.map(item => ({
-		key: item?.themeName,
-		text: item?.themeName,
-	}));
-	callback(restThemeList);
-}
 
 function savePreviewOnIndexDB(type: string, themeName: string, tip: string) {
 	emitEvent('switchRender2Canvas');
@@ -119,16 +99,19 @@ const defaultThemeOptions = defaultThemeList.map<IDropdownOption>(item => {
 });
 
 function editorHeader(props: EditorHeader): ReactElement {
-	const {onThemeChange, onRendererChange, renderer} = props;
+	const {onRendererChange, renderer} = props;
 
-	const [themeOptions, setThemeOptions] = useState<IDropdownOption[]>([]);
 	const [modalShow, setModalShow] = useState<boolean>(false);
 	const [errMsg, setErrMsg] = useState<string>('');
 
-	const [theme, setTheme] = useState<string>('default');
 	const newTheme = useRef<string>('');
 
 	const {t, i18n} = useTranslation();
+
+	const userStore = useUserStore();
+	const {
+		user, loginStatus, themes, themeName, curTheme,
+	} = userStore;
 
 	const switchLang: (
 		ev?: React.MouseEvent<HTMLElement> | React.KeyboardEvent<HTMLElement>,
@@ -149,11 +132,6 @@ function editorHeader(props: EditorHeader): ReactElement {
 	};
 
 	useEffect(() => {
-		getRestThemeList(
-			(restList: IDropdownOption[]) => {
-				setThemeOptions([...themeOptions, ...restList]);
-			},
-		);
 		const eventIndex = addEventListen('switchRender2Canvas', () => {
 			if (onRendererChange) {
 				onRendererChange('canvas');
@@ -168,24 +146,24 @@ function editorHeader(props: EditorHeader): ReactElement {
 		setErrMsg(t('vegaDesigner.saveAs.Modal.errorTip') as unknown as string);
 	}
 
-	function saveAsSuccess(themeName: string): void {
+	function saveAsSuccess(name: string): void {
 		setErrMsg('');
 		setModalShow(false);
-		setThemeOptions([...themeOptions, {key: themeName, text: themeName}]);
-		setTheme(themeName);
-		savePreviewOnIndexDB('add', themeName, t('vegaDesigner.saveSuccess'));
+		userStore.updateThemes().then(() => {
+			userStore.setTheme(name);
+		});
+		savePreviewOnIndexDB('add', name, t('vegaDesigner.saveSuccess'));
 	}
 
 	function saveAsBtnClick(): void {
 		savaAs(newTheme.current, getEditorValue(), saveAsSuccess, themeHasSame);
 	}
 
-	async function removeTheme(themeName: string): Promise<void> {
-		setTheme('default');
-		setThemeOptions(themeOptions.filter(item => item.text !== themeName));
+	async function removeTheme(name: string): Promise<void> {
+		userStore.updateThemes();
 		const themeDb = new ThemeIndexedDB(DataBaseName, 1);
-		await themeDb.removeData(ThemeObjectStoreName, themeName);
-		await themeDb.removeData(PreViewObjectStoreName, themeName);
+		await themeDb.removeData(ThemeObjectStoreName, name);
+		await themeDb.removeData(PreViewObjectStoreName, name);
 		emitEvent('notification', {
 			msg: t('vegaDesigner.removeSuccess'),
 			type: MessageBarType.success,
@@ -212,7 +190,7 @@ function editorHeader(props: EditorHeader): ReactElement {
 			const elId = `theme_renderer_item_${opt.text}`;
 			return (
 				<TooltipHost
-					content={<ThemePreview imageUrlKey={opt.text} />}
+					content={<ThemePreview themeName={opt.text} />}
 					id={elId}
 					calloutProps={{gapSpace: 0}}
 					styles={TooltipHostStyles}
@@ -244,9 +222,11 @@ function editorHeader(props: EditorHeader): ReactElement {
 		return null;
 	};
 
-	const isDefaultTheme = defaultThemeList.includes(theme);
+	const isDefaultTheme = curTheme?.isDefault ?? false;
 
-	const {userName} = useUserStore();
+	const isLoggedIn = loginStatus === 'loggedIn';
+
+	const customThemes = themes.map<IDropdownOption>(thm => ({key: thm.name, text: thm.name}));
 
 	return (
 		<div className={style['header-container']}>
@@ -258,19 +238,18 @@ function editorHeader(props: EditorHeader): ReactElement {
 				<Dropdown
 					options={[
 						{key: 'group:custom', text: t('vegaDesigner.customTheme'), itemType: DropdownMenuItemType.Header},
-						...themeOptions,
+						...customThemes,
 						{key: 'divider', text: '-', itemType: DropdownMenuItemType.Divider},
 						{key: 'group:default', text: t('vegaDesigner.defaultTheme'), itemType: DropdownMenuItemType.Header},
 						...defaultThemeOptions,
 					]}
 					className={style.dropdown}
 					onRenderOption={themeOptionRender}
-					selectedKey={theme}
+					selectedKey={themeName}
 					onChange={(e, opt) => {
-						if (opt && onThemeChange && opt.text !== theme) {
-							if ([...themeOptions, ...defaultThemeOptions].some(thm => thm.text === opt.text)) {
-								onThemeChange(opt.text);
-								setTheme(opt.text);
+						if (opt && opt.text !== themeName) {
+							if ([...customThemes, ...defaultThemeOptions].some(thm => thm.text === opt.text)) {
+								userStore.setTheme(opt.text);
 							}
 						}
 					}}
@@ -299,15 +278,16 @@ function editorHeader(props: EditorHeader): ReactElement {
 				</DefaultButton> */}
 				<DefaultButton
 					className={style.button}
-					disabled={isDefaultTheme}
+					disabled={isDefaultTheme || !isLoggedIn}
 					onClick={() => {
-						saveTheme(theme, getEditorValue(), t('vegaDesigner.saveSuccess'));
+						saveTheme(themeName, getEditorValue(), t('vegaDesigner.saveSuccess'));
 					}}
 				>
 					{t('vegaDesigner.saveTheme')}
 				</DefaultButton>
 				<DefaultButton
 					className={style.button}
+					disabled={!isLoggedIn}
 					onClick={() => {
 						setModalShow(true);
 					}}
@@ -321,19 +301,26 @@ function editorHeader(props: EditorHeader): ReactElement {
 					/>
 				</div>
 				<div>
-					{userName === null && (
+					{!isLoggedIn && (
 						<DefaultButton
-							className={style.button}
+							className={style['login-button']}
+							disabled={loginStatus !== 'loggedOut'}
 							onClick={() => {
-								// TODO: 登录
+								userStore.signUp();
 							}}
 						>
 							{t('vegaDesigner.login')}
 						</DefaultButton>
 					)}
-					{userName !== null && (
-						<span>{userName}</span>
-					)}
+					{user && isLoggedIn ? (
+						<a className={style.link} href={`${KanariesPath}/me`} target="_blank" rel="noreferrer">
+							<Persona
+								text={user.userName}
+								imageUrl={user.email}
+								size={PersonaSize.size32}
+							/>
+						</a>
+					) : null}
 				</div>
 				<Modal isOpen={modalShow} containerClassName={ModalStyle.container}>
 					<div className={ModalStyle.header}>
@@ -379,4 +366,4 @@ function editorHeader(props: EditorHeader): ReactElement {
 	);
 }
 
-export default React.memo(editorHeader);
+export default observer(editorHeader);

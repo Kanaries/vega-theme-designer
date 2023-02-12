@@ -1,44 +1,26 @@
-import React, {useRef, useEffect} from 'react';
-import {themeConfigList} from '../utils/loadVegaResource';
-import {DataBaseName, PreViewObjectStoreName} from '../config/dbConfig';
-import ThemeIndexedDB from '../utils/useIndexedDB';
+import React from 'react';
+import {observer} from 'mobx-react-lite';
+import {useUserStore} from '../store/userStore';
 
 interface ThemePreviewProps {
-	imageUrlKey: string
+	themeName: string;
 }
+
+const style: React.CSSProperties = {
+	maxWidth: '350px',
+	minHeight: '600px',
+};
 
 function ThemePreview(props: ThemePreviewProps) {
-	const {imageUrlKey} = props;
-	const style: React.CSSProperties = {
-		maxWidth: '350px',
-		minHeight: '600px',
-	};
-	const previewImg = useRef<HTMLImageElement | null>(null);
+	const {themes} = useUserStore();
+	const {themeName} = props;
+	const theme = themes.find(thm => thm.name === themeName);
 
-	async function updatePreviewImgFromIndexDB(themeName: string) {
-		const themeDb = new ThemeIndexedDB(DataBaseName, 1);
-		await themeDb.open();
-		const result: Record<string, string> | undefined =
-			await themeDb.getValue(PreViewObjectStoreName, themeName);
-		themeDb.close();
-		if (previewImg.current) {
-			if (result) {
-				previewImg.current.src = result.value;
-			}
-			if (!result && themeConfigList[themeName]) {
-				previewImg.current.src = themeConfigList[themeName].preview;
-			}
-		}
-	}
-
-	useEffect(() => {
-		updatePreviewImgFromIndexDB(imageUrlKey);
-	});
-	return (
+	return theme ? (
 		<div>
-			<img src="" alt="" width="350" height="600" style={style} ref={previewImg} />
+			<img alt={theme.name} width="350" height="600" style={style} src={theme.previewSrc} />
 		</div>
-	);
+	) : null;
 }
 
-export default React.memo(ThemePreview);
+export default observer(ThemePreview);

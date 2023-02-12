@@ -1,8 +1,10 @@
 import {Loader, loader} from 'vega';
+import type {ITheme} from '../store/userStore';
 
 interface VegaUrlConfig {
 	config: string;
 	preview: string;
+	data?: string;
 }
 
 export const themeConfigList: Record<string, VegaUrlConfig> = {
@@ -74,6 +76,12 @@ const handle: ProxyHandler<Record<string, string | Promise<string>>> = {
 	},
 };
 
+Object.keys(themeConfigList).forEach(key => {
+	vegaLoader.load(themeConfigList[key].config).then(data => {
+		themeConfigList[key].data = data;
+	});
+});
+
 function getThemeConfigList(): Record<string, string> {
 	const configUrl: Record<string, string> = {};
 	Object.keys(themeConfigList).forEach(item => {
@@ -87,3 +95,13 @@ const themeConfigUrlList = getThemeConfigList();
 export const schemaMap = new Proxy({...schemaUrl}, handle);
 
 export const configMap = new Proxy({...themeConfigUrlList}, handle);
+
+export const defaultThemes: readonly ITheme[] = Object.keys(getThemeConfigList()).map<ITheme>(
+	key => ({
+		name: key,
+		get configs() {
+			return themeConfigList[key].data ?? '{}';
+		},
+		previewSrc: themeConfigList[key].preview,
+	}),
+);

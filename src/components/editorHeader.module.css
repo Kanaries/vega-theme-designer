@@ -26,6 +26,10 @@
   width: 132px;
 }
 
+.login-button {
+  width: 132px;
+}
+
 .lang {
   flex: 1;
   display: flex;
@@ -39,4 +43,8 @@
   display: flex;
   width: 100%;
   justify-content: space-between;
+}
+
+.link {
+  text-decoration: none;
 }

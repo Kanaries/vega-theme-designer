@@ -3,19 +3,17 @@ import React, {
 	useRef, useState, useCallback, type MutableRefObject, ReactElement, useEffect,
 } from 'react';
 import {type Config} from 'vega-embed';
-import {MessageBarType, ThemeProvider} from '@fluentui/react';
+import {ThemeProvider} from '@fluentui/react';
 import html2canvas from 'html2canvas';
-import {useTranslation} from 'react-i18next';
 import style from './App.module.css';
 import VegaView from './components/vegaView';
 import Editor from './components/Editor';
 import {mainTheme} from './theme';
 import EditorHeader from './components/editorHeader';
-import {configMap, schemaUrl} from './utils/loadVegaResource';
+import {schemaUrl} from './utils/loadVegaResource';
 import ThemeIndexedDB from './utils/useIndexedDB';
-import {setEditorValue} from './components/editorValue';
-import {addEventListen, emitEvent, removeEventListen} from './utils/utils';
-import {DataBaseName, ThemeObjectStoreName, PreViewObjectStoreName} from './config/dbConfig';
+import {addEventListen, removeEventListen} from './utils/utils';
+import {DataBaseName, PreViewObjectStoreName} from './config/dbConfig';
 import MessageTip from './components/messageTip';
 import {useUserStoreProvider} from './store/userStore';
 
@@ -33,8 +31,6 @@ function App(): ReactElement {
 		useRef<HTMLDivElement | undefined>(undefined) as MutableRefObject<HTMLDivElement>;
 	const currentRenderVega = useRef<number>(0);
 
-	const {t} = useTranslation();
-
 	let x: number;
 
 	function editorChange(val: string): void {
@@ -43,37 +39,6 @@ function App(): ReactElement {
 			setVegaVal(vegaThemeVal);
 			setVegaContainerBackground(vegaThemeVal.background as string);
 		} catch { /* empty */ }
-	}
-
-	async function getTheme(themeName: string): Promise<void> {
-		try {
-			const themeDb = new ThemeIndexedDB(DataBaseName, 1);
-			await themeDb.open();
-			const result: Record<string, string> | undefined =
-				await themeDb.getValue(ThemeObjectStoreName, themeName);
-			themeDb.close();
-			if (result) {
-				setEditorValue(result.value);
-				emitEvent('editorChange', {
-					val: result.value,
-				});
-			} else {
-				const value = await configMap[themeName];
-				setEditorValue(value);
-				emitEvent('editorChange', {
-					val: value,
-				});
-			}
-		} catch {
-			emitEvent('notification', {
-				msg: t('vegaDesigner.indexDbGetError'),
-				type: MessageBarType.error,
-			});
-		}
-	}
-
-	function onThemeChange(val: string): void {
-		getTheme(val);
 	}
 
 	const fn = function (e: MouseEvent): void {
@@ -102,8 +67,6 @@ function App(): ReactElement {
 	const rendererChangeHeaderCallback = useCallback((val: Renderers) => {
 		setRendererValue(val);
 	}, []);
-
-	const themeChangeHeaderCallback = useCallback(onThemeChange, []);
 
 	const editorChangeCallback = useCallback(editorChange, []);
 
@@ -153,7 +116,6 @@ function App(): ReactElement {
 					<MessageTip />
 					<EditorHeader
 						onRendererChange={rendererChangeHeaderCallback}
-						onThemeChange={themeChangeHeaderCallback}
 						renderer={rendererValue}
 					/>
 
