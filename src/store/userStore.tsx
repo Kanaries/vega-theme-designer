@@ -172,10 +172,10 @@ export default class UserStore {
 			}
 			const url = getServerUrl('/api/ce/theme/list');
 			// eslint-disable-next-line no-spaced-func, func-call-spacing
-			const result = await request.get<never, { themeList: IThemeOnCloud[] }>(url);
+			const result = await request.get<never, { data: IThemeOnCloud[] }>(url);
 			if (result !== null) {
 				runInAction(() => {
-					this.themes = result.themeList.map(thm => {
+					this.themes = result.data.map(thm => {
 						const res = {
 							...thm,
 							isDefault: false,

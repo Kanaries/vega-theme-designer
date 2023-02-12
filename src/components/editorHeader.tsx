@@ -268,7 +268,7 @@ function editorHeader(props: EditorHeader): ReactElement {
 						</DefaultButton>
 					)}
 					{user && isLoggedIn ? (
-						<a className={style.link} href={`${KanariesPath}/me`} target="_blank" rel="noreferrer">
+						<a className={style.link} href={`${KanariesPath}/space/${user.userName}`} target="_blank" rel="noreferrer">
 							<Persona
 								text={user.userName}
 								imageUrl={user.email}
