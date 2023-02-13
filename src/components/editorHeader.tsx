@@ -228,7 +228,7 @@ function editorHeader(props: EditorHeader): ReactElement {
 				<DefaultButton
 					className={style.button}
 					disabled={isDefaultTheme || !isLoggedIn || !curTheme?.id}
-					onClick={() => curTheme && saveTheme(themeId, curTheme.id)}
+					onClick={() => curTheme && saveTheme(curTheme.name, curTheme.id)}
 				>
 					{t('vegaDesigner.saveTheme')}
 				</DefaultButton>
