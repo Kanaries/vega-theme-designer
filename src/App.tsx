@@ -3,20 +3,16 @@ import React, {
 	useRef, useState, useCallback, type MutableRefObject, ReactElement, useEffect,
 } from 'react';
 import {type Config} from 'vega-embed';
-import {MessageBarType, ThemeProvider} from '@fluentui/react';
+import {ThemeProvider} from '@fluentui/react';
 import html2canvas from 'html2canvas';
-import {useTranslation} from 'react-i18next';
 import style from './App.module.css';
 import VegaView from './components/vegaView';
 import Editor from './components/Editor';
 import {mainTheme} from './theme';
 import EditorHeader from './components/editorHeader';
-import {configMap, schemaUrl} from './utils/loadVegaResource';
-import ThemeIndexedDB from './utils/useIndexedDB';
-import {setEditorValue} from './components/editorValue';
-import {addEventListen, emitEvent, removeEventListen} from './utils/utils';
-import {DataBaseName, ThemeObjectStoreName, PreViewObjectStoreName} from './config/dbConfig';
+import {schemaUrl} from './utils/loadVegaResource';
 import MessageTip from './components/messageTip';
+import {useUserStoreProvider} from './store/userStore';
 
 function App(): ReactElement {
 	const [rendererValue, setRendererValue] = useState<Renderers>('canvas');
@@ -32,8 +28,6 @@ function App(): ReactElement {
 		useRef<HTMLDivElement | undefined>(undefined) as MutableRefObject<HTMLDivElement>;
 	const currentRenderVega = useRef<number>(0);
 
-	const {t} = useTranslation();
-
 	let x: number;
 
 	function editorChange(val: string): void {
@@ -42,37 +36,6 @@ function App(): ReactElement {
 			setVegaVal(vegaThemeVal);
 			setVegaContainerBackground(vegaThemeVal.background as string);
 		} catch { /* empty */ }
-	}
-
-	async function getTheme(themeName: string): Promise<void> {
-		try {
-			const themeDb = new ThemeIndexedDB(DataBaseName, 1);
-			await themeDb.open();
-			const result: Record<string, string> | undefined =
-				await themeDb.getValue(ThemeObjectStoreName, themeName);
-			themeDb.close();
-			if (result) {
-				setEditorValue(result.value);
-				emitEvent('editorChange', {
-					val: result.value,
-				});
-			} else {
-				const value = await configMap[themeName];
-				setEditorValue(value);
-				emitEvent('editorChange', {
-					val: value,
-				});
-			}
-		} catch {
-			emitEvent('notification', {
-				msg: t('vegaDesigner.indexDbGetError'),
-				type: MessageBarType.error,
-			});
-		}
-	}
-
-	function onThemeChange(val: string): void {
-		getTheme(val);
 	}
 
 	const fn = function (e: MouseEvent): void {
@@ -102,97 +65,92 @@ function App(): ReactElement {
 		setRendererValue(val);
 	}, []);
 
-	const themeChangeHeaderCallback = useCallback(onThemeChange, []);
-
 	const editorChangeCallback = useCallback(editorChange, []);
 
 	const vegaContainerStyle: React.CSSProperties = {
 		backgroundColor: vegaContainerBackground,
 	};
 
-	const preViewToIndexDB = (opt: Record<string, string>) => {
-		const {type, themeName} = opt;
+	const getPreviewFile = useCallback(async (): Promise<File | null> => {
 		const vegaPreviewDom = vegaContainer.current;
 		const windowWidth =
 			document.documentElement.clientWidth +
 			(vegaPreviewDom.scrollWidth - vegaPreviewDom.offsetWidth) * 2;
-		html2canvas(vegaPreviewDom, {
+		return html2canvas(vegaPreviewDom, {
 			width: vegaPreviewDom.scrollWidth, // 画布的宽
 			height: vegaPreviewDom.scrollHeight, // 画布的高
 			windowHeight: vegaPreviewDom.scrollHeight + 86,
 			windowWidth,
 			scale: 1, // 处理模糊问题
 			useCORS: true, // 开启跨域，这个是必须的
-		}).then(async data => {
-			const dataUrl = data.toDataURL('image/jpeg');
-			if (type === 'add') {
-				const themeDb = new ThemeIndexedDB(DataBaseName, 1);
-				await themeDb.addData(PreViewObjectStoreName, themeName, dataUrl);
+		}).then<File | null>(async data => {
+			const blob = await new Promise<Blob | null>(resolve => {
+				data.toBlob(d => {
+					resolve(d);
+				}, 'image/png');
+			});
+			if (!blob) {
+				return null;
 			}
-			if (type === 'update') {
-				const themeDb = new ThemeIndexedDB(DataBaseName, 1);
-				await themeDb.updateData(PreViewObjectStoreName, themeName, dataUrl);
-			}
+			const file = new File([blob], 'preview.png', {type: 'image/png'});
+			return file;
 		});
-	};
-
-	useEffect(() => {
-		const eventIndex = addEventListen('vegaCharts2Image', preViewToIndexDB);
-		return () => {
-			removeEventListen('vegaCharts2Image', eventIndex);
-		};
 	}, []);
 
+	const UserStoreProvider = useUserStoreProvider();
+
 	return (
-		<ThemeProvider theme={mainTheme}>
-			<div className={style['app-container']}>
-				<MessageTip />
-				<EditorHeader
-					onRendererChange={rendererChangeHeaderCallback}
-					onThemeChange={themeChangeHeaderCallback}
-					renderer={rendererValue}
-				/>
-
-				<div className={style['design-container']}>
-					<div
-						className={style['editor-container']}
-						ref={editorContainer}
-					>
-						<Editor
-							containerEl={editorContainer}
-							onChange={editorChangeCallback}
-						/>
-					</div>
-
-					<div
-						className={style.resizer}
-						onMouseDown={sliderDown}
-						ref={silder}
+		<UserStoreProvider>
+			<ThemeProvider theme={mainTheme}>
+				<div className={style['app-container']}>
+					<MessageTip />
+					<EditorHeader
+						onRendererChange={rendererChangeHeaderCallback}
+						renderer={rendererValue}
+						getPreviewFile={getPreviewFile}
 					/>
 
-					<div
-						className={style['charts-container']}
-						ref={vegaContainer}
-						style={vegaContainerStyle}
-						id="vegaChartsContainer"
-					>
-						{
-							Object.keys(schemaUrl).map(
-								(item: string) => (
-									<VegaView
-										renderNum={currentRenderVega}
-										config={vegaVal}
-										key={item}
-										renderer={rendererValue}
-										schemaName={item}
-									/>
-								),
-							)
-						}
+					<div className={style['design-container']}>
+						<div
+							className={style['editor-container']}
+							ref={editorContainer}
+						>
+							<Editor
+								containerEl={editorContainer}
+								onChange={editorChangeCallback}
+							/>
+						</div>
+
+						<div
+							className={style.resizer}
+							onMouseDown={sliderDown}
+							ref={silder}
+						/>
+
+						<div
+							className={style['charts-container']}
+							ref={vegaContainer}
+							style={vegaContainerStyle}
+							id="vegaChartsContainer"
+						>
+							{
+								Object.keys(schemaUrl).map(
+									(item: string) => (
+										<VegaView
+											renderNum={currentRenderVega}
+											config={vegaVal}
+											key={item}
+											renderer={rendererValue}
+											schemaName={item}
+										/>
+									),
+								)
+							}
+						</div>
 					</div>
 				</div>
-			</div>
-		</ThemeProvider>
+			</ThemeProvider>
+		</UserStoreProvider>
 	);
 }
 

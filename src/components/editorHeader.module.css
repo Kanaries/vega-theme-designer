@@ -23,7 +23,14 @@
 
 .button {
   margin-left: 1rem;
-  width: 132px;
+}
+
+.button-dangerous {
+  margin-left: 1rem;
+}
+
+.button-dangerous:not(:disabled) {
+  color: red;
 }
 
 .lang {
@@ -39,4 +46,26 @@
   display: flex;
   width: 100%;
   justify-content: space-between;
+}
+
+.dropdown-option {
+  display: flex;
+  align-items: center;
+}
+
+.dropdown-text {
+  flex-grow: 0;
+  flex-shrink: 1;
+}
+
+.dropdown-img {
+  flex-grow: 0;
+  flex-shrink: 0;
+  margin-right: 0.8em;
+  width: 1.8em;
+  height: 1.8em;
+}
+
+.link {
+  text-decoration: none;
 }

@@ -3,7 +3,8 @@
         "theme": "Theme",
         "renderer": "Renderer",
         "exportBtn": "Export Theme",
-        "saveTheme": "Save Theme",
+        "saveTheme": "Save",
+        "deleteTheme": "Delete",
         "language": "language",
         "saveAs": {
             "btn": "Save As",
@@ -17,6 +18,9 @@
         },
         "saveSuccess": "Save Theme Success",
         "removeSuccess": "Remove Theme Success",
-        "indexDbGetError": "Get Value Failed"
+        "indexDbGetError": "Get Value Failed",
+        "defaultTheme": "Built-in Themes",
+        "customTheme": "My Themes",
+        "login": "Sign In"
     }
 }

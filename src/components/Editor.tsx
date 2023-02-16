@@ -2,8 +2,10 @@ import React, {
 	useRef, useState, useEffect, type MutableRefObject, ReactElement,
 } from 'react';
 import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
+import {observer} from 'mobx-react-lite';
 import styles from './Editor.module.css';
 import {debounce, addEventListen, removeEventListen} from '../utils/utils';
+import {useUserStore} from '../store/userStore';
 import {setEditorValue} from './editorValue';
 
 type ChangeFunc = (val: string) => void;
@@ -18,6 +20,8 @@ function Editor(props: EditorProps): ReactElement {
 	const monacoEl =
 		useRef<HTMLDivElement | undefined>(undefined) as MutableRefObject<HTMLDivElement>;
 	const {onChange, containerEl} = props;
+	const userStore = useUserStore();
+	const {curTheme} = userStore;
 	// 挂载monaco到Dom
 	useEffect(() => {
 		if (monacoEl.current && editor === undefined) {
@@ -40,17 +44,17 @@ function Editor(props: EditorProps): ReactElement {
 					setEditorValue(currentValue);
 				}
 			});
-			const observer = new ResizeObserver(() => {
+			const ro = new ResizeObserver(() => {
 				window.setTimeout(() => {
 					editor.layout();
 				}, 0);
 			});
 			if (containerEl.current) {
-				observer.observe(containerEl.current);
+				ro.observe(containerEl.current);
 			}
 
 			return () => {
-				observer.disconnect();
+				ro.disconnect();
 			};
 		}
 
@@ -73,6 +77,14 @@ function Editor(props: EditorProps): ReactElement {
 		};
 	});
 
+	useEffect(() => {
+		if (curTheme) {
+			editor?.setValue(curTheme.config);
+		} else {
+			editor?.setValue('{}');
+		}
+	}, [curTheme]);
+
 	return (
 		<div
 			className={styles.Editor}
@@ -81,4 +93,4 @@ function Editor(props: EditorProps): ReactElement {
 	);
 }
 
-export default React.memo(Editor);
+export default observer(Editor);
