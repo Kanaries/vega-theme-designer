@@ -1,6 +1,6 @@
 {
   "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
-  "data": {"url": "./vega/vegaSchameData/barley.json"},
+  "data": {"url": "/app/theme-designer/vega/vegaSchameData/barley.json"},
   "mark": "bar",
   "encoding": {
     "x": {"aggregate": "sum", "field": "yield"},
