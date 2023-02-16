@@ -86,16 +86,6 @@ export default class UserStore {
 					this.updateThemes();
 				}
 			}),
-			reaction(() => this.themes, () => {
-				if (!this.allThemes.find(thm => thm.id === this.themeId)) {
-					this.themeId = this.defaultThemes[0].name;
-				}
-			}),
-			reaction(() => this.themeId, themeId => {
-				if (!this.allThemes.find(thm => thm.id === themeId)) {
-					this.themeId = this.defaultThemes[0].name;
-				}
-			}),
 		];
 		this.updateAuthStatus();
 	}
@@ -292,6 +282,9 @@ export default class UserStore {
 				type: MessageBarType.success,
 			});
 			await this.updateThemes();
+			runInAction(() => {
+				this.themeId = name;
+			});
 			return true;
 		} catch (error) {
 			// eslint-disable-next-line no-console
