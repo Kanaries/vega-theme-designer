@@ -9,59 +9,59 @@ interface VegaUrlConfig {
 
 export const themeConfigList: Record<string, VegaUrlConfig> = {
 	default: {
-		config: '/app/theme-designer/vega/vegaConfig/default.json',
-		preview: '/app/theme-designer/vega/vegaPreview/default.jpg',
+		config: './vega/vegaConfig/default.json',
+		preview: './vega/vegaPreview/default.jpg',
 	},
 	excel: {
-		config: '/app/theme-designer/vega/vegaConfig/excel.json',
-		preview: '/app/theme-designer/vega/vegaPreview/excel.jpg',
+		config: './vega/vegaConfig/excel.json',
+		preview: './vega/vegaPreview/excel.jpg',
 	},
 	dark: {
-		config: '/app/theme-designer/vega/vegaConfig/dark.json',
-		preview: '/app/theme-designer/vega/vegaPreview/dark.jpg',
+		config: './vega/vegaConfig/dark.json',
+		preview: './vega/vegaPreview/dark.jpg',
 	},
 	fivethirtyeight: {
-		config: '/app/theme-designer/vega/vegaConfig/fivethirtyeight.json',
-		preview: '/app/theme-designer/vega/vegaPreview/fivethirtyeight.jpg',
+		config: './vega/vegaConfig/fivethirtyeight.json',
+		preview: './vega/vegaPreview/fivethirtyeight.jpg',
 	},
 	googlecharts: {
-		config: '/app/theme-designer/vega/vegaConfig/googlecharts.json',
-		preview: '/app/theme-designer/vega/vegaPreview/googlecharts.jpg',
+		config: './vega/vegaConfig/googlecharts.json',
+		preview: './vega/vegaPreview/googlecharts.jpg',
 	},
 	latimes: {
-		config: '/app/theme-designer/vega/vegaConfig/latimes.json',
-		preview: '/app/theme-designer/vega/vegaPreview/latimes.jpg',
+		config: './vega/vegaConfig/latimes.json',
+		preview: './vega/vegaPreview/latimes.jpg',
 	},
 	powerbi: {
-		config: '/app/theme-designer/vega/vegaConfig/powerbi.json',
-		preview: '/app/theme-designer/vega/vegaPreview/powerbi.jpg',
+		config: './vega/vegaConfig/powerbi.json',
+		preview: './vega/vegaPreview/powerbi.jpg',
 	},
 	quartz: {
-		config: '/app/theme-designer/vega/vegaConfig/quartz.json',
-		preview: '/app/theme-designer/vega/vegaPreview/quartz.jpg',
+		config: './vega/vegaConfig/quartz.json',
+		preview: './vega/vegaPreview/quartz.jpg',
 	},
 	urbaninstitute: {
-		config: '/app/theme-designer/vega/vegaConfig/urbaninstitute.json',
-		preview: '/app/theme-designer/vega/vegaPreview/urbaninstitute.jpg',
+		config: './vega/vegaConfig/urbaninstitute.json',
+		preview: './vega/vegaPreview/urbaninstitute.jpg',
 	},
 	vox: {
-		config: '/app/theme-designer/vega/vegaConfig/vox.json',
-		preview: '/app/theme-designer/vega/vegaPreview/vox.jpg',
+		config: './vega/vegaConfig/vox.json',
+		preview: './vega/vegaPreview/vox.jpg',
 	},
 	ggplot2: {
-		config: '/app/theme-designer/vega/vegaConfig/ggplot2.json',
-		preview: '/app/theme-designer/vega/vegaPreview/ggplot2.jpg',
+		config: './vega/vegaConfig/ggplot2.json',
+		preview: './vega/vegaPreview/ggplot2.jpg',
 	},
 };
 
 export const schemaUrl: Record<string, string> = {
-	simpleBarChart: '/app/theme-designer/vega/vegaSchema/simple-bar-chart.json',
-	plotChart: '/app/theme-designer/vega/vegaSchema/plot-chart.json',
-	dotChart: '/app/theme-designer/vega/vegaSchema/dot-chart.json',
-	stackBarChart: '/app/theme-designer/vega/vegaSchema/horizontal-stacked-bar-chart.json',
-	stackAreaChart: '/app/theme-designer/vega/vegaSchema/stack-area-chart.json',
-	termographicChart: '/app/theme-designer/vega/vegaSchema/thermographic-chart.json',
-	countryMap: '/app/theme-designer/vega/vegaSchema/country-map.json',
+	simpleBarChart: './vega/vegaSchema/simple-bar-chart.json',
+	plotChart: './vega/vegaSchema/plot-chart.json',
+	dotChart: './vega/vegaSchema/dot-chart.json',
+	stackBarChart: './vega/vegaSchema/horizontal-stacked-bar-chart.json',
+	stackAreaChart: './vega/vegaSchema/stack-area-chart.json',
+	termographicChart: './vega/vegaSchema/thermographic-chart.json',
+	countryMap: './vega/vegaSchema/country-map.json',
 };
 
 const vegaLoader: Loader = loader();

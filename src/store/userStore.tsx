@@ -55,7 +55,7 @@ export default class UserStore {
 
 	// eslint-disable-next-line class-methods-use-this
 	public get defaultThemes() {
-		return defaultThemes.map(thm => ({...thm, isDefault: true}));
+		return defaultThemes;
 	}
 
 	public get allThemes() {
