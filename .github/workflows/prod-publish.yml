@@ -1,0 +1,24 @@
+name: prod publish
+on:
+  push:
+    branches: [master]
+jobs:
+  auto-build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [18.x]
+    steps:
+      - uses: actions/checkout@v3
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
+      - run: yarn install
+      - run: npm run build
+      - uses: manyuanrong/setup-ossutil@master
+        with:
+          endpoint: ${{ secrets.ALIOSS_ENDPOINT }}
+          access-key-id: ${{ secrets.ALIOSS_ID }}
+          access-key-secret: ${{ secrets.ALIOSS_SECRET }}
+      - run: ossutil cp -rf dist oss://${{ secrets.ALIOSS_BUCKET }}
