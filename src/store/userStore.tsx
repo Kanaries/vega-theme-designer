@@ -83,7 +83,11 @@ export default class UserStore {
 			reaction(() => this.loginStatus, status => {
 				if (status === 'loggedIn') {
 					this.updateUserInfo();
-					this.updateThemes();
+				}
+			}),
+			reaction(() => this.user, user => {
+				if (user) {
+					this.updateThemes(user.workspaceName);
 				}
 			}),
 		];
@@ -152,7 +156,7 @@ export default class UserStore {
 		}
 	}
 
-	public async updateThemes() {
+	public async updateThemes(workspaceName: string) {
 		try {
 			runInAction(() => {
 				this.themes = [];
@@ -162,7 +166,9 @@ export default class UserStore {
 			}
 			const url = getServerUrl('/api/ce/theme/list');
 			// eslint-disable-next-line no-spaced-func, func-call-spacing
-			const result = await request.get<never, { list: IThemeOnCloud[] }>(url);
+			const result = await request.get<{ workspaceName: string }, { list: IThemeOnCloud[] }>(url, {
+				workspaceName,
+			});
 			if (result !== null) {
 				runInAction(() => {
 					this.themes = result.list.map(thm => {
@@ -281,7 +287,7 @@ export default class UserStore {
 				msg: 'Saved',
 				type: MessageBarType.success,
 			});
-			await this.updateThemes();
+			await this.updateThemes(workspaceName);
 			runInAction(() => {
 				this.themeId = name;
 			});
