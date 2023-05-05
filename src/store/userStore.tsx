@@ -7,7 +7,10 @@ import React, {
 } from 'react';
 import {emitEvent} from '../utils/eventEmit';
 import {defaultThemes, themeConfigList} from '../utils/loadVegaResource';
-import request, {getServerUrl} from '../utils/request';
+import {
+	requestV1, AccessTokenStorageKey, RefreshTokenStorageKey, getServerUrl,
+} from '../utils/request';
+import {requestAnotherWindow} from '../utils/requestAnotherWindow';
 
 export interface IUserInfo {
 	userName: string;
@@ -132,11 +135,11 @@ export default class UserStore {
 				return;
 			}
 			const url = getServerUrl('/api/ce/personal');
-			const result = await request.get<never, IUserInfo>(url);
+			const result = requestV1.unwrap(await requestV1.get<void, IUserInfo>(url));
 			if (result !== null) {
 				const wspUrl = getServerUrl('/api/ce/simpleInfo/workspace');
 				// eslint-disable-next-line max-len
-				const wsp = await request.get<{userName: string}, {name: string}>(wspUrl, {userName: result.userName});
+				const wsp = requestV1.unwrap(await requestV1.get<{userName: string}, {name: string}>(wspUrl, {userName: result.userName}));
 				runInAction(() => {
 					this.user = {
 						...result,
@@ -166,9 +169,11 @@ export default class UserStore {
 			}
 			const url = getServerUrl('/api/ce/theme/list');
 			// eslint-disable-next-line no-spaced-func, func-call-spacing
-			const result = await request.get<{ workspaceName: string }, { list: IThemeOnCloud[] }>(url, {
-				workspaceName,
-			});
+			const result = requestV1.unwrap(
+				await requestV1.get<{ workspaceName: string }, { list: IThemeOnCloud[] }>(url, {
+					workspaceName,
+				}),
+			);
 			if (result !== null) {
 				runInAction(() => {
 					this.themes = result.list.map(thm => {
@@ -194,8 +199,10 @@ export default class UserStore {
 			this.loginStatus = 'pending';
 		});
 		try {
-			const url = getServerUrl('/api/loginStatus');
-			const res = await request.get<never, { loginStatus: boolean; userName: string }>(url);
+			const url = getServerUrl('/api/auth/v1/loginStatus');
+			const res = requestV1.unwrap(
+				await requestV1.get<void, { loginStatus: boolean; userName: string }>(url),
+			);
 			runInAction(() => {
 				this.loginStatus = res.loginStatus ? 'loggedIn' : 'loggedOut';
 			});
@@ -204,7 +211,7 @@ export default class UserStore {
 			runInAction(() => {
 				this.loginStatus = 'loggedOut';
 			});
-			return null;
+			return false;
 		}
 	}
 
@@ -212,37 +219,24 @@ export default class UserStore {
 		runInAction(() => {
 			this.loginStatus = 'pending';
 		});
-		const url = `${KanariesPath}/access?redirect_path=${encodeURIComponent(window.location.toString())}&redirect_close=1`;
-
-		const directed = await new Promise<boolean>(resolve => {
-			// Most browsers block popups if they are called
-			// outside of user-triggered event handlers like onclick.
-			const button = document.createElement('button');
-			button.onclick = () => {
-				const officialSite = window.open(url);
-				if (officialSite) {
-					const beginTime = Date.now();
-					const cb = (): void => {
-						if (officialSite.closed) {
-							resolve(true);
-							return;
-						}
-						if (Date.now() - beginTime > 1_000 * 60 * 10) {
-							resolve(false);
-							return;
-						}
-						setTimeout(cb, 200);
-					};
-					setTimeout(cb, 200);
-				} else {
-					resolve(false);
+		try {
+			await requestAnotherWindow(`${KanariesPath}/home/access?agentType=asp&clientId=${encodeURIComponent(import.meta.env.VITE_APP_ID)
+			}&clientSecret=${
+				encodeURIComponent(import.meta.env.VITE_APP_SECRET)
+			}&scopes=&state=${
+				encodeURIComponent(JSON.stringify({
+					redirect_path: window.location.href,
+				}))
+			}`, (tab, ev) => {
+				const {accessToken, refreshToken} = ev.data;
+				if (accessToken) {
+					localStorage.setItem(AccessTokenStorageKey, accessToken);
+					localStorage.setItem(RefreshTokenStorageKey, refreshToken);
+					tab.close();
 				}
-			};
-			button.click();
-		});
-		if (directed) {
+			});
 			await this.updateAuthStatus();
-		} else {
+		} catch (error) {
 			runInAction(() => {
 				this.loginStatus = 'loggedOut';
 			});
@@ -258,18 +252,20 @@ export default class UserStore {
 		try {
 			const config = JSON.parse(configRaw);
 			const url = getServerUrl('/api/ce/theme');
-			// eslint-disable-next-line no-spaced-func, func-call-spacing, max-len
-			const result = await request.post<{id?: string, workspaceName: string; name: string; config: object; cover: {name: string; size: number; type: string}}, IThemeOnCloud>(url, {
-				id,
-				workspaceName,
-				name,
-				config,
-				cover: {
-					type: cover.type,
-					name: cover.name,
-					size: cover.size,
-				},
-			});
+			const result = requestV1.unwrap(
+				// eslint-disable-next-line no-spaced-func, func-call-spacing, max-len
+				await requestV1.post<{id?: string, workspaceName: string; name: string; config: object; cover: {name: string; size: number; type: string}}, IThemeOnCloud>(url, {
+					id,
+					workspaceName,
+					name,
+					config,
+					cover: {
+						type: cover.type,
+						name: cover.name,
+						size: cover.size,
+					},
+				}),
+			);
 			const fileUploadRes = await fetch(result.cover.uploadUrl, {
 				method: 'PUT',
 				body: cover,
@@ -279,7 +275,7 @@ export default class UserStore {
 			}
 			const reportUploadSuccessApiUrl = getServerUrl('/api/ce/upload/callback');
 			// eslint-disable-next-line function-paren-newline
-			await request.get<{ storageId: string; status: 1 }, { downloadUrl: string }>(
+			await requestV1.get<{ storageId: string; status: 1 }, { downloadUrl: string }>(
 				reportUploadSuccessApiUrl, {storageId: result.cover.storageId, status: 1},
 			// eslint-disable-next-line function-paren-newline
 			);
