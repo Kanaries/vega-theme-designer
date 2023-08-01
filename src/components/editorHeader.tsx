@@ -1,14 +1,11 @@
 /* eslint-disable no-tabs */
 import React, {
-	type FormEvent, useEffect, useState, ReactElement,
+	useEffect, ReactElement,
 } from 'react';
 import {
 	Dropdown,
-	PrimaryButton,
 	Label,
 	DefaultButton,
-	Modal,
-	TextField,
 	TooltipHost,
 	IconButton,
 	type IDropdownOption,
@@ -19,7 +16,6 @@ import {
 	type ITooltipHostStyles,
 	TooltipDelay,
 	DirectionalHint,
-	MessageBarType,
 	DropdownMenuItemType,
 	Persona,
 	PersonaSize,
@@ -29,12 +25,10 @@ import {type Renderers} from 'vega';
 import {useTranslation} from 'react-i18next';
 import style from './editorHeader.module.css';
 // import downloadJson from '../utils/download';
-import ModalStyle from './modal.module.css';
-import {getEditorValue} from './editorValue';
 import ThemePreview from './themePreview';
 import {themeConfigList} from '../utils/loadVegaResource';
 import {
-	addEventListen, emitEvent, removeEventListen,
+	addEventListen, removeEventListen,
 } from '../utils/utils';
 import {KanariesPath, useUserStore} from '../store/userStore';
 
@@ -60,22 +54,22 @@ const defaultThemeOptions = defaultThemeList.map<IDropdownOption>(item => {
 });
 
 function editorHeader(props: EditorHeader): ReactElement {
-	const {onRendererChange, renderer, getPreviewFile} = props;
+	const {onRendererChange, renderer} = props;
 
-	const [modalShow, setModalShow] = useState<boolean>(false);
-	const [errMsg, setErrMsg] = useState<string>('');
+	// const [modalShow, setModalShow] = useState<boolean>(false);
+	// const [errMsg, setErrMsg] = useState<string>('');
 
-	const [asName, setAsName] = useState<string>('');
+	// const [asName, setAsName] = useState<string>('');
 
-	useEffect(() => {
-		setAsName('');
-	}, [modalShow]);
+	// useEffect(() => {
+	// 	setAsName('');
+	// }, [modalShow]);
 
 	const {t, i18n} = useTranslation();
 
 	const userStore = useUserStore();
 	const {
-		user, loginStatus, themes, themeId, curTheme, allThemes,
+		user, loginStatus, themes, themeId, allThemes,
 	} = userStore;
 
 	const switchLang: (
@@ -118,19 +112,19 @@ function editorHeader(props: EditorHeader): ReactElement {
 	// 	});
 	// }
 
-	async function saveTheme(name: string, id?: string | undefined): Promise<void> {
-		const config = getEditorValue();
-		const cover = await getPreviewFile();
-		if (!cover) {
-			emitEvent('notification', {
-				msg: 'Failed to generate preview',
-				type: MessageBarType.error,
-			});
-			return;
-		}
-		await userStore.saveTheme(name, config, cover, id);
-		setModalShow(false);
-	}
+	// async function saveTheme(name: string, id?: string | undefined): Promise<void> {
+	// 	const config = getEditorValue();
+	// 	const cover = await getPreviewFile();
+	// 	if (!cover) {
+	// 		emitEvent('notification', {
+	// 			msg: 'Failed to generate preview',
+	// 			type: MessageBarType.error,
+	// 		});
+	// 		return;
+	// 	}
+	// 	await userStore.saveTheme(name, config, cover, id);
+	// 	setModalShow(false);
+	// }
 
 	const TooltipHostStyles: Partial<ITooltipHostStyles> =
 	{
@@ -173,7 +167,7 @@ function editorHeader(props: EditorHeader): ReactElement {
 		return null;
 	};
 
-	const isDefaultTheme = curTheme?.isDefault ?? false;
+	// const isDefaultTheme = curTheme?.isDefault ?? false;
 
 	const isLoggedIn = loginStatus === 'loggedIn';
 
@@ -225,14 +219,14 @@ function editorHeader(props: EditorHeader): ReactElement {
 				>
 					{t('vegaDesigner.exportBtn')}
 				</DefaultButton> */}
-				<DefaultButton
+				{/* <DefaultButton
 					className={style.button}
 					disabled={isDefaultTheme || !isLoggedIn || !curTheme?.id}
 					onClick={() => curTheme && saveTheme(curTheme.name, curTheme.id)}
 				>
 					{t('vegaDesigner.saveTheme')}
-				</DefaultButton>
-				<DefaultButton
+				</DefaultButton> */}
+				{/* <DefaultButton
 					className={style.button}
 					disabled={!isLoggedIn}
 					onClick={() => {
@@ -240,7 +234,7 @@ function editorHeader(props: EditorHeader): ReactElement {
 					}}
 				>
 					{t('vegaDesigner.saveAs.btn')}
-				</DefaultButton>
+				</DefaultButton> */}
 				{/* <DefaultButton
 					className={style['button-dangerous']}
 					disabled={isDefaultTheme || !isLoggedIn}
@@ -277,7 +271,7 @@ function editorHeader(props: EditorHeader): ReactElement {
 						</a>
 					) : null}
 				</div>
-				<Modal isOpen={modalShow} containerClassName={ModalStyle.container}>
+				{/* <Modal isOpen={modalShow} containerClassName={ModalStyle.container}>
 					<div className={ModalStyle.header}>
 						<Label className={ModalStyle['modal-title']}>
 							{t('vegaDesigner.saveAs.Modal.title')}
@@ -312,7 +306,7 @@ function editorHeader(props: EditorHeader): ReactElement {
 							{t('vegaDesigner.saveAs.Modal.cancel')}
 						</DefaultButton>
 					</div>
-				</Modal>
+				</Modal> */}
 			</div>
 		</div>
 

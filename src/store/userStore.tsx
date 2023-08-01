@@ -164,25 +164,7 @@ export default class UserStore {
 			if (this.loginStatus !== 'loggedIn') {
 				return;
 			}
-			const url = getServerUrl('/api/ce/theme/list');
-			// eslint-disable-next-line no-spaced-func, func-call-spacing
-			const result = await request.get<{ workspaceName: string }, { list: IThemeOnCloud[] }>(url, {
-				workspaceName,
-			});
-			if (result !== null) {
-				runInAction(() => {
-					this.themes = result.list.map(thm => {
-						const res = {
-							...thm,
-							isDefault: false,
-							config: '{}',
-							previewSrc: thm.cover.downloadUrl,
-						};
-						res.config = JSON.stringify(thm.config, null, 2);
-						return res;
-					});
-				});
-			}
+			// TODO: get themes from cloud
 		} catch (error) {
 			// eslint-disable-next-line no-console
 			console.error(error);
@@ -257,32 +239,7 @@ export default class UserStore {
 		}
 		try {
 			const config = JSON.parse(configRaw);
-			const url = getServerUrl('/api/ce/theme');
-			// eslint-disable-next-line no-spaced-func, func-call-spacing, max-len
-			const result = await request.post<{id?: string, workspaceName: string; name: string; config: object; cover: {name: string; size: number; type: string}}, IThemeOnCloud>(url, {
-				id,
-				workspaceName,
-				name,
-				config,
-				cover: {
-					type: cover.type,
-					name: cover.name,
-					size: cover.size,
-				},
-			});
-			const fileUploadRes = await fetch(result.cover.uploadUrl, {
-				method: 'PUT',
-				body: cover,
-			});
-			if (!fileUploadRes.ok) {
-				throw new Error(await fileUploadRes.text());
-			}
-			const reportUploadSuccessApiUrl = getServerUrl('/api/ce/upload/callback');
-			// eslint-disable-next-line function-paren-newline
-			await request.get<{ storageId: string; status: 1 }, { downloadUrl: string }>(
-				reportUploadSuccessApiUrl, {storageId: result.cover.storageId, status: 1},
-			// eslint-disable-next-line function-paren-newline
-			);
+			// TODO: save theme to cloud
 			emitEvent('notification', {
 				msg: 'Saved',
 				type: MessageBarType.success,
